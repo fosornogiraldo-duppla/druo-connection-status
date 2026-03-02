@@ -513,8 +513,8 @@
                     <div class="num" id="druo-kpi-conectados" style="color:#86efac;">—</div>
                     <div class="lbl">Conectados</div>
                 </div>
-                <div class="kpi-pill" style="background:rgba(251,191,36,0.2);">
-                    <div class="num" id="druo-kpi-descartados" style="color:#fde68a;">—</div>
+                <div class="kpi-pill" style="background:rgba(148,163,184,0.2);">
+                    <div class="num" id="druo-kpi-descartados" style="color:#cbd5e1;">—</div>
                     <div class="lbl">Descartados</div>
                 </div>
             </div>
@@ -551,7 +551,6 @@
                     </div>
                     <div class="step-card">
                         <div class="step-num">4</div>
-                        <div class="step-title">Confirmar estado</div>
                         <div class="step-desc">Una vez conectado, el cliente debería salir de esta lista automáticamente
                             en la próxima sincronización.</div>
                     </div>
@@ -586,15 +585,21 @@
         <!-- ====== VIEW: PENDIENTES ====== -->
         <div id="view-pendientes">
             <div class="filter-card">
+                <!-- Row 1: Status chips + Search + count -->
                 <div class="filter-row" style="margin-bottom:16px;">
-                    <div class="filter-col">
-                        <div class="section-label">Status DRUO</div>
-                        <select id="druo-filter-status" class="filter-select">
-                            <option value="all">Todos los status</option>
-                            <option value="null">Nunca intentados (null)</option>
-                            <option value="CONNECTION_FAILED">Fallaron (CONNECTION_FAILED)</option>
-                        </select>
+                    <div class="filter-col" style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:9px;">
+                            <div class="section-label" style="margin-bottom:0;">Status DRUO</div>
+                            <span id="status-count"
+                                style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
+                            <button id="clear-statuses" class="chip-clear-btn">✕ Limpiar</button>
+                        </div>
+                        <div id="status-chips" class="chips-scroll">
+                            <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
+                        </div>
                     </div>
+                </div>
+                <div class="filter-row" style="margin-bottom:16px; border-top:1px solid #f1f5f9; padding-top:16px;">
                     <div class="filter-col" style="flex:1; min-width:220px;">
                         <div class="section-label">Buscar</div>
                         <input id="druo-search-input" type="text" class="search-input"

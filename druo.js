@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('druo-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
-    const filterStatus = document.getElementById('druo-filter-status');
+    const statusChipsEl = document.getElementById('status-chips');
     const portafolioChipsEl = document.getElementById('portafolio-chips');
     const searchInput = document.getElementById('druo-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let conectadosData = [];
     let descartadosCodes = new Set();
     let selectedPortafolios = new Set();
+    let selectedStatuses = new Set(); // empty = all statuses
     let pendingDiscardRow = null;
 
     // ----------------------------------------------------------------
@@ -30,15 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getURLParams() {
         const p = new URLSearchParams(window.location.search);
         return {
-            status: p.get('status') || 'all',
+            statuses: p.get('statuses') ? p.get('statuses').split(',') : [],
             portafolios: p.get('portafolios') ? p.get('portafolios').split(',') : [],
             search: p.get('search') || ''
         };
     }
     function saveURLParams() {
         const params = new URLSearchParams();
-        const status = filterStatus ? filterStatus.value : 'all';
-        if (status !== 'all') params.set('status', status);
+        if (selectedStatuses.size > 0) params.set('statuses', [...selectedStatuses].join(','));
         if (selectedPortafolios.size > 0) params.set('portafolios', [...selectedPortafolios].join(','));
         const search = searchInput ? searchInput.value.trim() : '';
         if (search) params.set('search', search);
@@ -97,8 +97,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiTotal) kpiTotal.textContent = activos.length;
         if (kpiFailed) kpiFailed.textContent = activos.filter(d => d.druo_status === 'CONNECTION_FAILED').length;
         if (kpiNull) kpiNull.textContent = activos.filter(d => !d.druo_status).length;
-        if (kpiConectados) kpiConectados.textContent = (conectadosData && conectadosData.length > 0) ? conectadosData.length : '—';
+        if (kpiConectados) kpiConectados.textContent = conectadosData !== null ? conectadosData.length : '—';
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
+    }
+
+    // ----------------------------------------------------------------
+    // Status chips (multi-select)
+    // ----------------------------------------------------------------
+    function buildStatusChips() {
+        if (!statusChipsEl) return;
+        // Get all unique statuses from active (non-discarded) rows
+        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const statuses = [...new Set(activos.map(d => d.druo_status || 'null'))].sort();
+
+        statusChipsEl.innerHTML = '';
+        statuses.forEach(s => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            const label = s === 'null' ? 'Sin intentar (null)' : s;
+            chip.textContent = label;
+            chip.className = 'portafolio-chip';
+            chip.dataset.status = s;
+            if (selectedStatuses.has(s)) chip.classList.add('active');
+            chip.addEventListener('click', () => {
+                selectedStatuses.has(s) ? selectedStatuses.delete(s) : selectedStatuses.add(s);
+                chip.classList.toggle('active');
+                saveURLParams(); renderTable(); updateStatusCount();
+            });
+            statusChipsEl.appendChild(chip);
+        });
+        updateStatusCount();
+    }
+
+    function updateStatusCount() {
+        const el = document.getElementById('status-count');
+        if (!el) return;
+        el.textContent = selectedStatuses.size === 0 ? 'Todos' : `${selectedStatuses.size} seleccionados`;
+        el.style.background = selectedStatuses.size === 0 ? '#e2e8f0' : 'var(--color-brand-dark)';
+        el.style.color = selectedStatuses.size === 0 ? '#475569' : 'white';
     }
 
     // ----------------------------------------------------------------
@@ -149,16 +185,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function renderTable() {
         if (!tableBody) return;
-        const fStatus = filterStatus ? filterStatus.value : 'all';
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         const filtered = druoData
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => {
-                const dStatus = d.druo_status || null;
-                if (fStatus === 'null') return !dStatus;
-                if (fStatus === 'CONNECTION_FAILED') return dStatus === 'CONNECTION_FAILED';
-                return true;
+                if (selectedStatuses.size === 0) return true;
+                const dStatus = d.druo_status || 'null';
+                return selectedStatuses.has(dStatus);
             })
             .filter(d => selectedPortafolios.size === 0 || selectedPortafolios.has(d.portafolio))
             .filter(d => !searchTxt
@@ -376,17 +410,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     // Event listeners
     // ----------------------------------------------------------------
-    if (filterStatus) filterStatus.addEventListener('change', () => { saveURLParams(); renderTable(); });
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
 
-    const clearBtn = document.getElementById('clear-portafolios');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
+    const clearPortBtn = document.getElementById('clear-portafolios');
+    if (clearPortBtn) {
+        clearPortBtn.addEventListener('click', () => {
             selectedPortafolios.clear();
-            document.querySelectorAll('.portafolio-chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('#portafolio-chips .portafolio-chip').forEach(c => c.classList.remove('active'));
             saveURLParams(); renderTable(); updateChipCount();
+        });
+    }
+
+    const clearStatusBtn = document.getElementById('clear-statuses');
+    if (clearStatusBtn) {
+        clearStatusBtn.addEventListener('click', () => {
+            selectedStatuses.clear();
+            document.querySelectorAll('#status-chips .portafolio-chip').forEach(c => c.classList.remove('active'));
+            saveURLParams(); renderTable(); updateStatusCount();
         });
     }
 
@@ -394,9 +436,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init
     // ----------------------------------------------------------------
     const urlP = getURLParams();
-    if (filterStatus) filterStatus.value = urlP.status;
     if (searchInput) searchInput.value = urlP.search;
     urlP.portafolios.forEach(p => selectedPortafolios.add(p));
+    urlP.statuses.forEach(s => selectedStatuses.add(s));
+
 
     // Load all data in parallel
     [druoData, descartados, conectadosData] = await Promise.all([
@@ -407,6 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
 
     updateKPIs();
+    buildStatusChips();
     buildPortafolioChips();
     buildConectadosPortFilter();
     renderTable();
