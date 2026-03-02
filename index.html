@@ -14,7 +14,7 @@
         }
 
         .druo-container {
-            max-width: 1300px;
+            max-width: 1350px;
             margin: 0 auto;
             padding: 28px 24px;
         }
@@ -23,9 +23,9 @@
         .hero {
             background: var(--color-brand-dark);
             color: white;
-            padding: 28px 36px;
+            padding: 26px 36px;
             border-radius: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -34,54 +34,212 @@
         }
 
         .hero h1 {
-            font-size: 24px;
+            font-size: 22px;
             margin: 0 0 4px 0;
         }
 
         .hero p {
-            opacity: 0.75;
+            opacity: 0.7;
             margin: 0;
             font-size: 13px;
         }
 
         .kpi-pill {
             border-radius: 12px;
-            padding: 12px 20px;
+            padding: 10px 18px;
             text-align: center;
-            min-width: 90px;
+            min-width: 80px;
         }
 
         .kpi-pill .num {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
             line-height: 1;
         }
 
         .kpi-pill .lbl {
-            font-size: 11px;
+            font-size: 10px;
             opacity: 0.8;
             margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        /* View tabs */
+        /* How-to banner */
+        .howto-banner {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .howto-banner:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .howto-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .howto-header:hover {
+            background: #f8fafc;
+        }
+
+        .howto-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 15px;
+        }
+
+        .howto-chevron {
+            transition: transform 0.25s ease;
+            color: #94a3b8;
+            font-size: 18px;
+        }
+
+        .howto-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        .howto-body {
+            padding: 0 24px 24px;
+            display: none;
+        }
+
+        .howto-body.open {
+            display: block;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .step-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--color-brand-dark);
+            color: white;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .step-desc {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .loom-embed-section {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .loom-placeholder {
+            background: #1e293b;
+            border-radius: 10px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            gap: 10px;
+            cursor: default;
+        }
+
+        .loom-placeholder.has-video {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .loom-placeholder iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .loom-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .loom-input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .loom-input-row button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: var(--color-brand-dark);
+            color: white;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Tabs */
         .view-tabs {
             display: flex;
             gap: 4px;
             background: white;
             border-radius: 14px;
             padding: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             border: 1px solid #e2e8f0;
             width: fit-content;
         }
 
         .view-tab {
-            padding: 10px 22px;
+            padding: 9px 20px;
             border-radius: 10px;
             border: none;
             background: none;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: #64748b;
             cursor: pointer;
@@ -98,27 +256,76 @@
             color: #334155;
         }
 
-        /* Section card */
-        .card {
+        /* Filters card */
+        .filter-card {
             background: white;
             border-radius: 16px;
             border: 1px solid #e2e8f0;
-            overflow: hidden;
+            padding: 22px 26px;
+            margin-bottom: 18px;
         }
 
-        .card-padded {
-            padding: 24px 28px;
+        .filter-row {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .filter-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.06em;
+        }
+
+        .filter-select {
+            padding: 9px 34px 9px 13px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 10px center;
+            font-family: inherit;
+            font-size: 13px;
+            color: #334155;
+            cursor: pointer;
+            min-width: 200px;
+            appearance: none;
+        }
+
+        .search-input {
+            padding: 9px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            font-family: inherit;
+            font-size: 13px;
+            color: #334155;
+            min-width: 240px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-brand-dark);
         }
 
         /* Chips */
         .chips-scroll {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 7px;
         }
 
         .portafolio-chip {
-            padding: 6px 14px;
+            padding: 5px 13px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
@@ -133,7 +340,6 @@
         .portafolio-chip:hover {
             border-color: var(--color-brand-dark);
             color: var(--color-brand-dark);
-            background: #f0fdf4;
         }
 
         .portafolio-chip.active {
@@ -143,7 +349,7 @@
         }
 
         .chip-clear-btn {
-            padding: 6px 14px;
+            padding: 5px 13px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
@@ -152,7 +358,6 @@
             color: #94a3b8;
             cursor: pointer;
             transition: all 0.15s ease;
-            white-space: nowrap;
         }
 
         .chip-clear-btn:hover {
@@ -161,113 +366,79 @@
             background: #fef2f2;
         }
 
-        .section-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #94a3b8;
-            letter-spacing: 0.06em;
-            margin-bottom: 8px;
-        }
-
-        /* Filter controls */
-        .filter-select {
-            padding: 10px 36px 10px 14px;
-            border-radius: 10px;
-            border: 1.5px solid #e2e8f0;
-            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 12px center;
-            font-family: inherit;
-            font-size: 14px;
-            color: #334155;
-            cursor: pointer;
-            min-width: 210px;
-            appearance: none;
-        }
-
-        .search-input {
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1.5px solid #e2e8f0;
+        /* Tables */
+        .table-card {
             background: white;
-            font-family: inherit;
-            font-size: 14px;
-            color: #334155;
-            min-width: 260px;
-            transition: border-color 0.2s;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: var(--color-brand-dark);
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        /* Table */
-        #druo-table th,
-        #druo-descartados-table th {
-            padding: 14px 20px;
+        thead th {
+            padding: 13px 18px;
             color: #94a3b8;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 600;
             background: #f8fafc;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid #eef2f6;
+            text-align: left;
         }
 
-        #druo-table td,
-        #druo-descartados-table td {
-            padding: 14px 20px;
+        tbody td {
+            padding: 13px 18px;
             border-bottom: 1px solid #f8fafc;
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        #druo-table tbody tr:hover,
-        #druo-descartados-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-        #druo-table tbody tr:last-child td,
-        #druo-descartados-table tbody tr:last-child td {
+        tbody tr:last-child td {
             border-bottom: none;
         }
 
-        /* Discard button */
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Buttons */
         .btn-discard {
             padding: 5px 12px;
             border-radius: 7px;
             border: 1.5px solid #fca5a5;
             background: white;
             color: #b91c1c;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.15s ease;
-            white-space: nowrap;
         }
 
         .btn-discard:hover {
             background: #fee2e2;
         }
 
-        /* Restore button */
         .btn-restore {
             padding: 5px 12px;
             border-radius: 7px;
             border: 1.5px solid #6ee7b7;
             background: white;
             color: #065f46;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.15s ease;
-            white-space: nowrap;
         }
 
         .btn-restore:hover {
             background: #d1fae5;
         }
 
-        /* Modal overlay */
+        /* Modals */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -294,11 +465,11 @@
 
         .modal-close-btn {
             position: absolute;
-            right: 18px;
-            top: 14px;
+            right: 16px;
+            top: 12px;
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 22px;
             color: #94a3b8;
             cursor: pointer;
             padding: 4px 8px;
@@ -323,12 +494,12 @@
         <header class="hero">
             <div>
                 <h1>🔌 DRUO Connection Status</h1>
-                <p>Clientes que aún no están conectados a DRUO</p>
+                <p>Monitoreo de conexión de clientes a DRUO</p>
             </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                 <div class="kpi-pill" style="background:rgba(255,255,255,0.12);">
                     <div class="num" id="druo-kpi-total">—</div>
-                    <div class="lbl">Total</div>
+                    <div class="lbl">No Conectados</div>
                 </div>
                 <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
                     <div class="num" id="druo-kpi-failed" style="color:#fca5a5;">—</div>
@@ -338,27 +509,85 @@
                     <div class="num" id="druo-kpi-null" style="color:#94a3b8;">—</div>
                     <div class="lbl">Sin intentar</div>
                 </div>
-                <div class="kpi-pill" style="background:rgba(255,193,7,0.2);">
+                <div class="kpi-pill" style="background:rgba(34,197,94,0.2);">
+                    <div class="num" id="druo-kpi-conectados" style="color:#86efac;">—</div>
+                    <div class="lbl">Conectados</div>
+                </div>
+                <div class="kpi-pill" style="background:rgba(251,191,36,0.2);">
                     <div class="num" id="druo-kpi-descartados" style="color:#fde68a;">—</div>
                     <div class="lbl">Descartados</div>
                 </div>
             </div>
         </header>
 
+        <!-- HOW TO BANNER -->
+        <div class="howto-banner">
+            <div class="howto-header" onclick="toggleHowto()">
+                <div class="howto-title">
+                    <span>📖</span>
+                    <span>¿Cómo conectar un cliente a DRUO?</span>
+                </div>
+                <span class="howto-chevron" id="howto-chevron">▼</span>
+            </div>
+            <div class="howto-body" id="howto-body">
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-num">1</div>
+                        <div class="step-title">Validar datos del inmueble</div>
+                        <div class="step-desc">Verificar que el código de inmueble y los datos del cliente estén
+                            correctos en el CRM antes de intentar la conexión.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">2</div>
+                        <div class="step-title">Acceder a DRUO</div>
+                        <div class="step-desc">Ingresar al portal de DRUO con las credenciales del equipo y buscar el
+                            inmueble por código.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">3</div>
+                        <div class="step-title">Iniciar conexión</div>
+                        <div class="step-desc">Seleccionar "Conectar cliente" e ingresar la información requerida. Si
+                            falla, revisar el campo "remarks" en este dashboard.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">4</div>
+                        <div class="step-title">Confirmar estado</div>
+                        <div class="step-desc">Una vez conectado, el cliente debería salir de esta lista automáticamente
+                            en la próxima sincronización.</div>
+                    </div>
+                </div>
+                <!-- Loom embed -->
+                <div class="loom-embed-section">
+                    <div style="font-size:13px; font-weight:700; color:#334155; margin-bottom:12px;">🎥 Video tutorial
+                    </div>
+                    <div id="loom-player" class="loom-placeholder">
+                        <span style="font-size:32px;">🎬</span>
+                        <span style="font-size:14px; color:#94a3b8;">Video tutorial pendiente</span>
+                        <span style="font-size:12px; color:#64748b;">Pega el link de Loom cuando lo tengas</span>
+                    </div>
+                    <div class="loom-input-row">
+                        <input id="loom-url-input" type="text" placeholder="https://www.loom.com/share/..." value="">
+                        <button onclick="embedLoom()">Insertar video</button>
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:8px;">El link se guardará en tu navegador para
+                        siempre.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- VIEW TABS -->
         <div class="view-tabs">
             <button class="view-tab active" id="tab-pendientes" onclick="switchView('pendientes')">📋
                 Pendientes</button>
+            <button class="view-tab" id="tab-conectados" onclick="switchView('conectados')">✅ Conectados</button>
             <button class="view-tab" id="tab-descartados" onclick="switchView('descartados')">🗂 Descartados</button>
         </div>
 
         <!-- ====== VIEW: PENDIENTES ====== -->
         <div id="view-pendientes">
-            <!-- Filtros -->
-            <div class="card card-padded" style="margin-bottom: 20px;">
-                <!-- Row 1: Status + Search + count -->
-                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; margin-bottom:20px;">
-                    <div style="display:flex; flex-direction:column; gap:6px;">
+            <div class="filter-card">
+                <div class="filter-row" style="margin-bottom:16px;">
+                    <div class="filter-col">
                         <div class="section-label">Status DRUO</div>
                         <select id="druo-filter-status" class="filter-select">
                             <option value="all">Todos los status</option>
@@ -366,32 +595,29 @@
                             <option value="CONNECTION_FAILED">Fallaron (CONNECTION_FAILED)</option>
                         </select>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:240px;">
-                        <div class="section-label">Buscar inmueble o cliente</div>
+                    <div class="filter-col" style="flex:1; min-width:220px;">
+                        <div class="section-label">Buscar</div>
                         <input id="druo-search-input" type="text" class="search-input"
                             placeholder="🔍  Nombre o código...">
                     </div>
-                    <div style="margin-left:auto; padding-top: 26px;">
-                        <span id="result-count" style="font-size:13px; color:#94a3b8;">— resultados</span>
+                    <div style="margin-left:auto; padding-top:24px;">
+                        <span id="result-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
                     </div>
                 </div>
-                <!-- Row 2: Portafolio chips -->
                 <div>
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:9px;">
                         <div class="section-label" style="margin-bottom:0;">Portafolio</div>
                         <span id="portafolio-count"
-                            style="display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; background:#e2e8f0; color:#475569;">Todos</span>
+                            style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
                         <button id="clear-portafolios" class="chip-clear-btn">✕ Limpiar</button>
                     </div>
                     <div id="portafolio-chips" class="chips-scroll">
-                        <span style="color:#94a3b8; font-size:13px;">Cargando...</span>
+                        <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Tabla pendientes -->
-            <div class="card">
-                <table id="druo-table" style="width:100%; border-collapse:collapse;">
+            <div class="table-card">
+                <table>
                     <thead>
                         <tr>
                             <th style="min-width:150px;">Código Inmueble</th>
@@ -404,8 +630,47 @@
                     </thead>
                     <tbody id="druo-tbody">
                         <tr>
-                            <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">Cargando datos...
-                            </td>
+                            <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====== VIEW: CONECTADOS ====== -->
+        <div id="view-conectados" class="hidden">
+            <div class="filter-card">
+                <div class="filter-row" style="margin-bottom:0;">
+                    <div class="filter-col" style="flex:1; min-width:220px;">
+                        <div class="section-label">Buscar</div>
+                        <input id="conectados-search-input" type="text" class="search-input"
+                            placeholder="🔍  Nombre o código...">
+                    </div>
+                    <div class="filter-col">
+                        <div class="section-label">Portafolio</div>
+                        <select id="conectados-filter-portafolio" class="filter-select">
+                            <option value="all">Todos los portafolios</option>
+                        </select>
+                    </div>
+                    <div style="margin-left:auto; padding-top:24px;">
+                        <span id="conectados-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
+                    </div>
+                </div>
+            </div>
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:150px;">Código Inmueble</th>
+                            <th>Oportunidad / Cliente</th>
+                            <th>Portafolio</th>
+                            <th>Fecha Entrega</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conectados-tbody">
+                        <tr>
+                            <td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -414,8 +679,8 @@
 
         <!-- ====== VIEW: DESCARTADOS ====== -->
         <div id="view-descartados" class="hidden">
-            <div class="card">
-                <table id="druo-descartados-table" style="width:100%; border-collapse:collapse;">
+            <div class="table-card">
+                <table>
                     <thead>
                         <tr>
                             <th style="min-width:150px;">Código Inmueble</th>
@@ -429,8 +694,7 @@
                     </thead>
                     <tbody id="druo-descartados-tbody">
                         <tr>
-                            <td colspan="7" style="text-align:center; padding:40px; color:#94a3b8;">Cargando
-                                descartados...</td>
+                            <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -439,40 +703,40 @@
 
     </div>
 
-    <!-- ====== MODAL: DETALLE ====== -->
-    <div id="detail-modal" class="modal-overlay" style="display:none;">
+    <!-- MODAL: DETALLE -->
+    <div id="detail-modal" class="modal-overlay">
         <div class="modal-box">
             <button class="modal-close-btn" onclick="closeModal('detail-modal')">&times;</button>
             <div id="detail-modal-body"></div>
         </div>
     </div>
 
-    <!-- ====== MODAL: DESCARTAR ====== -->
-    <div id="discard-modal" class="modal-overlay" style="display:none;">
+    <!-- MODAL: DESCARTAR -->
+    <div id="discard-modal" class="modal-overlay">
         <div class="modal-box" style="max-width:460px;">
             <button class="modal-close-btn" onclick="closeModal('discard-modal')">&times;</button>
-            <div style="text-align:center; margin-bottom:24px;">
-                <div style="font-size:40px; margin-bottom:12px;">🗂️</div>
-                <h2 style="font-size:20px; color:#1e293b; margin:0 0 6px 0;">Descartar Inmueble</h2>
-                <p id="discard-modal-subtitle" style="color:#64748b; margin:0; font-size:14px;"></p>
+            <div style="text-align:center; margin-bottom:22px;">
+                <div style="font-size:36px; margin-bottom:10px;">🗂️</div>
+                <h2 style="font-size:18px; color:#1e293b; margin:0 0 5px 0;">Descartar Inmueble</h2>
+                <p id="discard-modal-subtitle" style="color:#64748b; margin:0; font-size:13px;"></p>
             </div>
-            <div style="margin-bottom:20px;">
+            <div style="margin-bottom:18px;">
                 <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:8px;">
                     Razón del descarte <span style="color:#ef4444;">*</span>
                 </label>
                 <textarea id="discard-reason" rows="4"
-                    placeholder="Ej: Ya fue conectado manualmente, no aplica para DRUO, información incorrecta..."
-                    style="width:100%; padding:12px; border-radius:10px; border:1.5px solid #e2e8f0; font-family:inherit; font-size:14px; resize:vertical; box-sizing:border-box; transition:border-color 0.2s;"
+                    placeholder="Ej: Ya fue conectado manualmente, no aplica para DRUO..."
+                    style="width:100%; padding:12px; border-radius:10px; border:1.5px solid #e2e8f0; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box;"
                     onfocus="this.style.borderColor='var(--color-brand-dark)'"
                     onblur="this.style.borderColor='#e2e8f0'"></textarea>
             </div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button onclick="closeModal('discard-modal')"
-                    style="padding:10px 20px; border-radius:10px; border:1.5px solid #e2e8f0; background:white; color:#64748b; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">
+                    style="padding:9px 18px; border-radius:10px; border:1.5px solid #e2e8f0; background:white; color:#64748b; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">
                     Cancelar
                 </button>
                 <button id="confirm-discard-btn"
-                    style="padding:10px 22px; border-radius:10px; border:none; background:#b91c1c; color:white; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;">
+                    style="padding:9px 20px; border-radius:10px; border:none; background:#b91c1c; color:white; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">
                     Descartar
                 </button>
             </div>
@@ -480,16 +744,50 @@
     </div>
 
     <script>
+        // ---- How-to toggle ----
+        function toggleHowto() {
+            const body = document.getElementById('howto-body');
+            const chevron = document.getElementById('howto-chevron');
+            body.classList.toggle('open');
+            chevron.classList.toggle('open');
+        }
+
+        // ---- Loom embed ----
+        function embedLoom() {
+            const input = document.getElementById('loom-url-input');
+            const url = input.value.trim();
+            if (!url) return;
+
+            // Convert share URL to embed URL
+            const embedUrl = url.replace('https://www.loom.com/share/', 'https://www.loom.com/embed/').split('?')[0];
+            const player = document.getElementById('loom-player');
+            player.innerHTML = `<iframe src="${embedUrl}" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="width:100%;height:100%;border-radius:10px;"></iframe>`;
+            player.classList.add('has-video');
+
+            // Persist in localStorage
+            localStorage.setItem('druo_loom_url', url);
+        }
+
+        // Restore Loom on load
+        (function () {
+            const saved = localStorage.getItem('druo_loom_url');
+            if (saved) {
+                document.getElementById('loom-url-input').value = saved;
+                // Will call embedLoom after DOM is ready
+                document.addEventListener('DOMContentLoaded', embedLoom);
+            }
+        })();
+
+        // ---- View switching ----
         function switchView(view) {
-            document.getElementById('view-pendientes').classList.toggle('hidden', view !== 'pendientes');
-            document.getElementById('view-descartados').classList.toggle('hidden', view !== 'descartados');
-            document.getElementById('tab-pendientes').classList.toggle('active', view === 'pendientes');
-            document.getElementById('tab-descartados').classList.toggle('active', view === 'descartados');
+            ['pendientes', 'conectados', 'descartados'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+                document.getElementById(`tab-${v}`).classList.toggle('active', v === view);
+            });
         }
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-        // Close modals on background click
+
+        // ---- Modal helpers ----
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         ['detail-modal', 'discard-modal'].forEach(id => {
             document.getElementById(id).addEventListener('click', function (e) {
                 if (e.target === this) closeModal(id);
