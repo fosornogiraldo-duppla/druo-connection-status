@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterStatus = document.getElementById('druo-filter-status');
     const filterPortafolio = document.getElementById('druo-filter-portafolio');
     const searchInput = document.getElementById('druo-search-input');
-    
+
     // KPIs
     const kpiTotal = document.getElementById('druo-kpi-total');
     const kpiFailed = document.getElementById('druo-kpi-failed');
@@ -32,15 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Tratamos como null tanto el valor explícito null como el string "null"
         const nulls = data.filter(d => !d.druo_status || d.druo_status === 'null').length;
 
-        if(kpiTotal) kpiTotal.textContent = total;
-        if(kpiFailed) kpiFailed.textContent = failed;
-        if(kpiNull) kpiNull.textContent = nulls;
+        if (kpiTotal) kpiTotal.textContent = total;
+        if (kpiFailed) kpiFailed.textContent = failed;
+        if (kpiNull) kpiNull.textContent = nulls;
     }
 
     function populatePortafolioFilter(data) {
         const portafolios = [...new Set(data.map(d => d.portafolio).filter(Boolean))];
         portafolios.sort();
-        
+
         if (!filterPortafolio) return;
         filterPortafolio.innerHTML = '<option value="all">Todos</option>';
         portafolios.forEach(p => {
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = druoData.filter(d => {
             // Evaluamos estado (null string, falsey o null real)
             const dStatus = d.druo_status || 'null';
-            
+
             let matchStatus = true;
             if (fStatus === 'null') {
                 matchStatus = dStatus === 'null';
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         filtered.forEach(d => {
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
-            
+
             // Hover styling via JS para la fila (el dashboard ya tiene estilos hover en .table-container tbody tr)
             // No need to inject since styles.css affects to #clients-table. We gave #druo-table for our id. Wait! 
             // the main table uses `table { width: 100% ... tbody tr:hover }`. So it inherits automatically.
@@ -128,40 +128,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modalBody = document.getElementById('modalBody');
         const infoModal = document.getElementById('infoModal');
         if (!modalBody || !infoModal) return;
-        
-        modalBody.innerHTML = \`
+
+        modalBody.innerHTML = `
             <div style="margin-bottom: 24px;">
                 <h2 style="color: var(--color-brand-dark); margin-bottom: 12px; font-size: 20px;">ℹ️ Detalle de Inmueble DRUO</h2>
                 
                 <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
-                    <span style="font-size: 16px; font-weight: bold; color: #334155;">\${data.codigo_inmueble || 'Sin código'}</span>
-                    \${badgeHtml}
+                    <span style="font-size: 16px; font-weight: bold; color: #334155;">${data.codigo_inmueble || 'Sin código'}</span>
+                    ${badgeHtml}
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                     <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #f1f5f9;">
                         <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Oportunidad</div>
-                        <div style="font-size: 14px; color: #334155;">\${data.nombre_oportunidad || '-'}</div>
+                        <div style="font-size: 14px; color: #334155;">${data.nombre_oportunidad || '-'}</div>
                     </div>
 
                     <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #f1f5f9;">
                         <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Portafolio</div>
-                        <div style="font-size: 14px; color: #334155;">\${data.portafolio || '-'}</div>
+                        <div style="font-size: 14px; color: #334155;">${data.portafolio || '-'}</div>
                     </div>
                 </div>
 
                 <div style="background: #fffbeb; padding: 16px; border-radius: 8px; border: 1px dashed #fcd34d; margin-bottom: 16px;">
                     <div style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase; margin-bottom: 8px;">Remarks / Razón del Fallo</div>
-                    <div style="font-size: 14px; color: #92400e; white-space: pre-wrap; line-height: 1.5;">\${data.remarks || 'No hay remarks registrados para este inmueble.'}</div>
+                    <div style="font-size: 14px; color: #92400e; white-space: pre-wrap; line-height: 1.5;">${data.remarks || 'No hay remarks registrados para este inmueble.'}</div>
                 </div>
             </div>
-        \`;
+        `;
 
         infoModal.style.display = 'block';
     }
 
-    // Modal Close is handled globally in logic.js via:
-    // document.querySelector('.close').addEventListener('click', ...)
+    const closeBtn = document.getElementById('modal-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            const infoModal = document.getElementById('infoModal');
+            if (infoModal) infoModal.style.display = 'none';
+        });
+    }
+
+    // Modal behavior for clicking outside content
+    window.addEventListener('click', (event) => {
+        const infoModal = document.getElementById('infoModal');
+        if (event.target === infoModal) {
+            infoModal.style.display = 'none';
+        }
+    });
 
     // Events for filters
     if (filterStatus) filterStatus.addEventListener('change', renderTable);
