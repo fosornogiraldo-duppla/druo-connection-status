@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
 
-    const kpiTotal = document.getElementById('druo-kpi-total');
     const kpiFailed = document.getElementById('druo-kpi-failed');
     const kpiNull = document.getElementById('druo-kpi-null');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
@@ -97,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const conectados = druoData.filter(d => d.druo_status === 'CONNECTED');
         const pendientes = all.filter(d => d.druo_status !== 'CONNECTED');
 
-        if (kpiTotal) kpiTotal.textContent = pendientes.length;
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => d.druo_status === 'CONNECTION_FAILED').length;
         if (kpiNull) kpiNull.textContent = pendientes.filter(d => !d.druo_status).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
