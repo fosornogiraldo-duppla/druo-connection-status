@@ -110,19 +110,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function displayStatusLabel(status) {
-        if (isMissingInDruoStatus(status)) return 'No esta en DRUO';
+        if (isMissingInDruoStatus(status)) return 'No están en DRUO';
         if (isDisconnectedStatus(status)) return 'Desconectado';
-        return normalizeDruoStatus(status);
+        return 'Desconectado';
     }
 
     function getStatusFilterKey(status) {
         if (isMissingInDruoStatus(status)) return 'missing';
-        if (isDisconnectedStatus(status)) return 'disconnected';
-        return normalizeDruoStatus(status);
+        return 'disconnected';
     }
 
     function getStatusFilterLabel(statusKey) {
-        if (statusKey === 'missing') return 'No esta en DRUO';
+        if (statusKey === 'missing') return 'No están en DRUO';
         if (statusKey === 'disconnected') return 'Desconectado';
         return statusKey;
     }
@@ -191,8 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     failed: 0,
                     sinIntentar: 0,
                     connected: 0,
-                    discarded: 0,
-                    other: 0
+                    discarded: 0
                 });
             }
 
@@ -208,7 +206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (isMissingInDruoStatus(row.druo_status)) {
                 bucket.sinIntentar += 1;
             } else {
-                bucket.other += 1;
+                bucket.failed += 1;
             }
         });
 
@@ -245,11 +243,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="portfolio-row">
                 <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">${row.portafolio}</div>
                 <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}" title="${row.portafolio}: ${row.total} operativos">
+                    ${buildOverviewSegment(`${row.portafolio} · No están en DRUO`, 'stack-null', row.sinIntentar, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Desconectados`, 'stack-failed', row.failed, row.total)}
-                    ${buildOverviewSegment(`${row.portafolio} · No esta en DRUO`, 'stack-null', row.sinIntentar, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Conectados`, 'stack-connected', row.connected, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Descartados`, 'stack-discarded', row.discarded, row.total)}
-                    ${buildOverviewSegment(`${row.portafolio} · Otros estados`, 'stack-other', row.other, row.total)}
                 </div>
             </div>
         `).join('');

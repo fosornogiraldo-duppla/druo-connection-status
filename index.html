@@ -225,22 +225,22 @@
             background: white;
             border-radius: 18px;
             border: 1px solid #e2e8f0;
-            padding: 22px 24px;
+            padding: 18px 20px;
             margin-bottom: 18px;
         }
 
         .overview-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
+            cursor: pointer;
+            user-select: none;
         }
 
         .overview-title {
             margin: 0;
-            font-size: 20px;
+            font-size: 19px;
             color: #163c31;
         }
 
@@ -250,17 +250,36 @@
             color: #64748b;
         }
 
+        .overview-chevron {
+            color: #94a3b8;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+
+        .overview-chevron.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .overview-body {
+            margin-top: 16px;
+        }
+
+        .overview-body.collapsed {
+            display: none;
+        }
+
         .overview-legend {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px 14px;
+            gap: 8px 14px;
+            margin-bottom: 14px;
         }
 
         .legend-item {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: 11px;
             color: #475569;
         }
 
@@ -273,15 +292,15 @@
 
         .portfolio-chart {
             display: grid;
-            gap: 10px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
 
         .portfolio-row {
-            display: grid;
-            grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
-            gap: 16px;
-            align-items: center;
-            padding: 8px 0;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #edf2f7;
+            background: linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,0.95));
         }
 
         .portfolio-name {
@@ -289,16 +308,17 @@
             font-weight: 700;
             color: #334155;
             line-height: 1.35;
+            margin-bottom: 10px;
         }
 
         .stack-track {
-            height: 20px;
-            background: #eef2f7;
+            height: 16px;
+            background: rgba(226,232,240,0.55);
             border-radius: 8px;
             overflow: hidden;
             display: flex;
             position: relative;
-            box-shadow: inset 0 0 0 1px #e2e8f0;
+            box-shadow: inset 0 0 0 1px rgba(226,232,240,0.95);
         }
 
         .stack-segment {
@@ -308,30 +328,27 @@
         }
 
         .stack-segment:hover {
-            filter: brightness(0.95);
+            filter: brightness(0.97);
         }
 
         .stack-failed {
-            background: #ead27a;
+            background: rgba(251, 191, 36, 0.55);
         }
 
         .stack-null {
-            background: #ef8d8f;
+            background: rgba(248, 113, 113, 0.5);
         }
 
         .stack-connected {
-            background: #8bd9aa;
+            background: rgba(74, 222, 128, 0.5);
         }
 
         .stack-discarded {
-            background: #b4bfd2;
-        }
-
-        .stack-other {
-            background: #9dc7e8;
+            background: rgba(148, 163, 184, 0.45);
         }
 
         .overview-empty {
+            grid-column: 1 / -1;
             padding: 22px;
             border-radius: 14px;
             background: #f8fafc;
@@ -376,9 +393,8 @@
         }
 
         @media (max-width: 860px) {
-            .portfolio-row {
+            .portfolio-chart {
                 grid-template-columns: 1fr;
-                gap: 8px;
             }
         }
 
@@ -623,13 +639,13 @@
                 <p>Monitoreo de conexión de clientes a DRUO</p>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
-                    <div class="num" id="druo-kpi-failed" style="color:#fde68a;">—</div>
-                    <div class="lbl">Desconectados</div>
-                </div>
                 <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
                     <div class="num" id="druo-kpi-null" style="color:#fca5a5;">—</div>
                     <div class="lbl">No están en DRUO</div>
+                </div>
+                <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
+                    <div class="num" id="druo-kpi-failed" style="color:#fde68a;">—</div>
+                    <div class="lbl">Desconectados</div>
                 </div>
                 <div class="kpi-pill" style="background:rgba(34,197,94,0.2);">
                     <div class="num" id="druo-kpi-conectados" style="color:#86efac;">—</div>
@@ -697,21 +713,23 @@
         </div>
 
         <section class="overview-card">
-            <div class="overview-header">
+            <div class="overview-header" onclick="toggleOverview()">
                 <div>
                     <h2 class="overview-title">Estado por portafolio</h2>
                     <p class="overview-subtitle">Distribución apilada de inmuebles operativos por estado DRUO.</p>
                 </div>
+                <span class="overview-chevron" id="overview-chevron">▼</span>
+            </div>
+            <div class="overview-body" id="overview-body">
                 <div class="overview-legend">
-                    <span class="legend-item"><span class="legend-dot stack-failed"></span>Desconectados</span>
                     <span class="legend-item"><span class="legend-dot stack-null"></span>No están en DRUO</span>
+                    <span class="legend-item"><span class="legend-dot stack-failed"></span>Desconectados</span>
                     <span class="legend-item"><span class="legend-dot stack-connected"></span>Conectados</span>
                     <span class="legend-item"><span class="legend-dot stack-discarded"></span>Descartados</span>
-                    <span class="legend-item"><span class="legend-dot stack-other"></span>Otros estados</span>
                 </div>
-            </div>
-            <div id="portfolio-overview" class="portfolio-chart">
-                <div class="overview-empty">Cargando resumen por portafolio...</div>
+                <div id="portfolio-overview" class="portfolio-chart">
+                    <div class="overview-empty">Cargando resumen por portafolio...</div>
+                </div>
             </div>
         </section>
 
@@ -896,6 +914,13 @@
             const chevron = document.getElementById('howto-chevron');
             body.classList.toggle('open');
             chevron.classList.toggle('open');
+        }
+
+        function toggleOverview() {
+            const body = document.getElementById('overview-body');
+            const chevron = document.getElementById('overview-chevron');
+            body.classList.toggle('collapsed');
+            chevron.classList.toggle('collapsed');
         }
 
         // ---- Loom embed ----
