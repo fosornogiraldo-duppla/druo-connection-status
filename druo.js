@@ -93,11 +93,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // KPIs
     // ----------------------------------------------------------------
     function updateKPIs() {
-        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        if (kpiTotal) kpiTotal.textContent = activos.length;
-        if (kpiFailed) kpiFailed.textContent = activos.filter(d => d.druo_status === 'CONNECTION_FAILED').length;
-        if (kpiNull) kpiNull.textContent = activos.filter(d => !d.druo_status).length;
-        if (kpiConectados) kpiConectados.textContent = conectadosData !== null ? conectadosData.length : '—';
+        const all = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const conectados = druoData.filter(d => d.druo_status === 'CONNECTED');
+        const pendientes = all.filter(d => d.druo_status !== 'CONNECTED');
+
+        if (kpiTotal) kpiTotal.textContent = pendientes.length;
+        if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => d.druo_status === 'CONNECTION_FAILED').length;
+        if (kpiNull) kpiNull.textContent = pendientes.filter(d => !d.druo_status).length;
+        if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
     }
 
@@ -106,8 +109,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function buildStatusChips() {
         if (!statusChipsEl) return;
-        // Get all unique statuses from active (non-discarded) rows
-        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        // Only show non-CONNECTED statuses (CONNECTED has its own tab)
+        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble) && d.druo_status !== 'CONNECTED');
         const statuses = [...new Set(activos.map(d => d.druo_status || 'null'))].sort();
 
         statusChipsEl.innerHTML = '';
@@ -189,6 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const filtered = druoData
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => d.druo_status !== 'CONNECTED') // CONNECTED goes to its own tab
             .filter(d => {
                 if (selectedStatuses.size === 0) return true;
                 const dStatus = d.druo_status || 'null';
@@ -235,16 +239,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchTxt = conectadosSearch ? conectadosSearch.value.toLowerCase().trim() : '';
         const filterPort = conectadosPortFilter ? conectadosPortFilter.value : 'all';
 
-        if (conectadosData === null) {
-            conectadosBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:50px;color:#94a3b8;">
-                <div style="font-size:40px;margin-bottom:12px;">🔧</div>
-                <strong style="color:#334155;display:block;margin-bottom:8px;">Tabla druo_conectados no encontrada</strong>
-                <span style="font-size:13px;">Crea la tabla en Supabase con los campos: codigo_inmueble, nombre_oportunidad, portafolio, fecha_entrega, druo_status</span>
-            </td></tr>`;
-            return;
-        }
-
-        const filtered = conectadosData
+        // Derive conectados directly from druoData
+        const filtered = druoData
+            .filter(d => d.druo_status === 'CONNECTED')
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
@@ -255,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         conectadosBody.innerHTML = '';
         if (filtered.length === 0) {
-            conectadosBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados.</td></tr>';
+            conectadosBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
             return;
         }
 
@@ -266,15 +263,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td><span style="font-size:11px;color:#064e3b;background:#d1fae5;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
-                <td><span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">${d.druo_status || 'CONNECTED'}</span></td>
+                <td><span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">CONNECTED</span></td>
             `;
             conectadosBody.appendChild(row);
         });
     }
 
     function buildConectadosPortFilter() {
-        if (!conectadosPortFilter || !conectadosData || conectadosData.length === 0) return;
-        const ports = [...new Set(conectadosData.map(d => d.portafolio).filter(Boolean))].sort();
+        if (!conectadosPortFilter) return;
+        const ports = [...new Set(
+            druoData.filter(d => d.druo_status === 'CONNECTED').map(d => d.portafolio).filter(Boolean)
+        )].sort();
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
             const opt = document.createElement('option');
