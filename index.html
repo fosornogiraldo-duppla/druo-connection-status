@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duppla | Dashboard de Seguimiento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <h1>Dashboard seguimiento de clientes</h1>
+                <p class="text-sm" style="opacity: 0.8;">Priorización y gestión llamada meta de compra</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="priorizacion">Priorización de Clientes</button>
+                <button class="tab-btn" data-tab="llamadas">Gestión de Llamadas</button>
+                <button class="tab-btn" data-tab="offramp">Gestión Off-Ramp</button>
+                <button class="tab-btn" data-tab="estrategias">Estrategias por Segmento</button>
+                <button class="tab-btn" data-tab="druo">DRUO Connection Status</button>
+            </div>
+        </header>
+
+        <!-- VISTA 1: PRIORIZACIÓN -->
+        <main id="view-priorizacion" class="view active">
+
+            <!-- Main Analytical Row (Chart + KPIs) -->
+            <div style="display: flex; gap: 20px; margin-bottom: 32px; align-items: stretch; flex-wrap: wrap;">
+
+                <!-- Evolutionary Chart Section -->
+                <section
+                    style="background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); flex: 1; min-width: 500px; display: flex; flex-direction: column;">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; color: var(--color-brand-dark);">Evolución por maduración cliente
+                        </h3>
+                        <p class="text-xs text-secondary" style="margin-top: 4px;">Distribución de estados por años
+                            en Duppla</p>
+                    </div>
+                    <div style="flex: 1; min-height: 250px;">
+                        <canvas id="retentionChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- KPIs Grid (Side) -->
+                <section class="kpi-grid"
+                    style="flex: 0 0 360px; margin-bottom: 0; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">Listos Banco <span class="info-icon" data-info="listos">ℹ️</span></div>
+                        <div class="kpi-value highlight" id="kpi-northstar" style="font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">Off-Ramp <span class="info-icon" data-info="offramp">ℹ️</span></div>
+                        <div class="kpi-value text-success" id="kpi-offramp" style="font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">Contactados (6m)</div>
+                        <div class="kpi-value highlight" id="kpi-reach-6m" style="font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">Construyendo <span class="info-icon" data-info="construyendo">ℹ️</span></div>
+                        <div class="kpi-value text-warning" id="kpi-construyendo"
+                            style="color: #d97706; font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">Pendientes (sin llamada últimos 6 meses)</div>
+                        <div class="kpi-value text-danger" id="kpi-forgotten" style="font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card" style="padding: 12px;">
+                        <div class="kpi-title" style="font-size: 11px;">En riesgo <span class="info-icon" data-info="riesgo">ℹ️</span></div>
+                        <div class="kpi-value text-danger" id="kpi-risk" style="font-size: 18px;">--</div>
+                    </div>
+
+                    <div class="kpi-card"
+                        style="border-top: 3px solid var(--color-accent); padding: 12px; grid-column: span 2;">
+                        <div class="kpi-title" style="font-size: 11px;">Total inmuebles operativos</div>
+                        <div class="kpi-value" id="kpi-total" style="font-size: 18px;">--</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Diagnóstico Section -->
+            <h3
+                style="margin: 24px 0 12px; font-size: 14px; color: var(--color-text-secondary); text-transform: uppercase;">
+                📉 Diagnóstico: Clientes que fallan criterios (sin mora)
+            </h3>
+            <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+                <div class="kpi-card" style="background-color: white;">
+                    <div class="kpi-value text-danger" id="countFallaEquity">0</div>
+                    <div class="text-sm">Equity < 30%</div>
+                    </div>
+                    <div class="kpi-card" style="background-color: white;">
+                        <div class="kpi-value text-danger" id="countFallaScore">0</div>
+                        <div class="text-sm">Score < 700</div>
+                        </div>
+                        <div class="kpi-card" style="background-color: white;">
+                            <div class="kpi-value text-danger" id="countFallaDTI">0</div>
+                            <div class="text-sm">DTI > 35%</div>
+                        </div>
+                    </div>
+
+                    <!-- Table Container (Filters) -->
+                    <section class="table-container" style="margin-bottom: 32px; padding: 24px;">
+                        <div class="filters-header">
+                            <span class="text-sm font-bold">Filtros</span>
+                            <button id="toggle-filters-btn" class="filter-btn" type="button">Ocultar filtros</button>
+                        </div>
+                        <div id="filters-content">
+                            <div class="filter-group">
+                                <span class="text-sm font-bold" style="margin-right: 8px;">Estado:</span>
+                                <button class="filter-btn active" data-filter="all" data-type="group">Todos</button>
+                                <button class="filter-btn btn-offramp" data-filter="Off-Ramp"
+                                    data-type="group">Off-Ramp</button>
+                                <button class="filter-btn btn-construyendo" data-filter="Construyendo"
+                                    data-type="group">Construyendo</button>
+                                <button class="filter-btn btn-riesgo" data-filter="En riesgo" data-type="group">En
+                                    Riesgo</button>
+                                <button class="filter-btn btn-nuevos" data-filter="Nuevos" data-type="group">Nuevos</button>
+                            </div>
+                            <div class="filter-group" style="margin-top: 8px;">
+                                <span class="text-sm font-bold" style="margin-right: 8px;">Segmento:</span>
+                                <button class="filter-btn active" data-filter="all" data-type="segment">Todos</button>
+                                <button class="filter-btn" data-filter="Avanzados" data-type="segment">Avanzados <span
+                                        class="info-icon" data-info="avanzados">ℹ️</span></button>
+                                <button class="filter-btn" data-filter="Estables" data-type="segment">Estables <span
+                                        class="info-icon" data-info="estables">ℹ️</span></button>
+                                <button class="filter-btn" data-filter="Estancados" data-type="segment">Estancados <span
+                                        class="info-icon" data-info="estancados">ℹ️</span></button>
+                                <button class="filter-btn" data-filter="Inestables" data-type="segment">Inestables <span
+                                        class="info-icon" data-info="inestables">ℹ️</span></button>
+                                <button class="filter-btn" data-filter="Nuevos" data-type="segment">Nuevos <span
+                                        class="info-icon" data-info="nuevos">ℹ️</span></button>
+                            </div>
+                            <div class="filter-group" style="margin-top: 10px;">
+                                <span class="text-sm font-bold" style="margin-right: 8px;">Buscar cliente:</span>
+                                <input id="client-search-input" type="text" class="client-search-input"
+                                    placeholder="Escribe nombre del cliente...">
+                            </div>
+                        </div>
+                        <div id="active-filter-hint" class="filter-hint" style="display:none;"></div>
+                    </section>
+
+                    <!-- Tabla -->
+                    <section class="table-container">
+                        <table id="clients-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:180px;">Cliente</th>
+                                    <th>Antigüedad</th>
+                                    <th>Cumple banco</th>
+                                    <th>Segmento</th>
+                                    <th>Inicial</th>
+                                    <th class="highlight-bg">Equity Actual</th>
+                                    <th class="highlight-bg">Score</th>
+                                    <th class="highlight-bg">DTI</th>
+                                    <th>Comprado</th>
+                                    <th>Proy 5a</th>
+                                    <th>Delta Score</th>
+                                    <th>Mora</th>
+                                    <th>Mora Prom.</th>
+                                    <th>Hábito de pago</th>
+                                    <th>Situación</th>
+                                    <th>Última Llamada</th>
+                                    <th style="min-width:100px;">Agendar</th>
+                                    <th style="min-width:110px;">Off-Ramp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-tbody">
+                                <!-- Rows rendered by JS -->
+                            </tbody>
+                        </table>
+                    </section>
+        </main>
+
+        <!-- VISTA 2: LLAMADAS -->
+        <main id="view-llamadas" class="view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2>Gestión de Llamadas</h2>
+                <div class="sub-tabs">
+                    <button class="sub-tab-btn active" data-subtab="queue">Pendientes por agendar</button>
+                    <button class="sub-tab-btn" data-subtab="scheduled">Agendadas</button>
+                    <button class="sub-tab-btn" data-subtab="completed">Realizadas</button>
+                </div>
+            </div>
+
+            <div id="calls-container" class="calls-grid">
+                <!-- Call Cards rendered by JS -->
+            </div>
+        </main>
+
+        <!-- VISTA 3: GESTIÓN OFF-RAMP -->
+        <main id="view-offramp" class="view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Gestión Off-Ramp</h2>
+            </div>
+
+            <div style="background: #fff7ed; border: 1px dashed #fdba74; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+                <p style="font-weight: 700; color: #9a3412; margin-bottom: 6px;">⚠️ Funcionalidades pendientes</p>
+                <p style="color: #9a3412;">Funcionalidades pendientes cuando terminen de mapear proceso Off-Ramp.</p>
+            </div>
+
+            <div id="offramp-container" class="calls-grid">
+                <!-- Off-Ramp cards rendered by JS -->
+            </div>
+        </main>
+
+        <!-- VISTA 4: ESTRATEGIAS -->
+        <main id="view-estrategias" class="view">
+            <h2 style="margin-bottom: 24px;">Estrategias por Segmento</h2>
+            <div
+                style="background: white; border-radius: 16px; padding: 40px; text-align: center; border: 1px dashed var(--color-border);">
+                <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+                <h3 style="margin-bottom: 8px;">Próximamente</h3>
+                <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto;">
+                    Espacio reservado para definir tácticas, guiones de llamada y planes de acción específicos para
+                    cada segmento de cliente.
+                </p>
+            </div>
+        </main>
+
+        <!-- VISTA 5: DRUO CONNECTION STATUS -->
+        <main id="view-druo" class="view">
+            <h2 style="margin-bottom: 24px;">DRUO Connection Status</h2>
+
+            <!-- KPIs DRUO -->
+            <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+                <div class="kpi-card" style="background-color: white;">
+                    <div class="kpi-value highlight" id="druo-kpi-total">0</div>
+                    <div class="text-sm">Total No Conectados</div>
+                </div>
+                <div class="kpi-card" style="background-color: white;">
+                    <div class="kpi-value text-danger" id="druo-kpi-failed">0</div>
+                    <div class="text-sm">Fallaron (CONNECTION_FAILED)</div>
+                </div>
+                <div class="kpi-card" style="background-color: white;">
+                    <div class="kpi-value text-secondary" id="druo-kpi-null">0</div>
+                    <div class="text-sm">Nunca Intentados (null)</div>
+                </div>
+            </div>
+
+            <!-- Table Container (Filters) -->
+            <section class="table-container" style="margin-bottom: 32px; padding: 24px;">
+                <div class="filters-header">
+                    <span class="text-sm font-bold">Filtros DRUO</span>
+                </div>
+                <div id="filters-content-druo">
+                    <div class="filter-group">
+                        <span class="text-sm font-bold" style="margin-right: 8px;">Status:</span>
+                        <select id="druo-filter-status" style="padding: 6px; border-radius: 4px; border: 1px solid var(--color-border);">
+                            <option value="all">Todos</option>
+                            <option value="null">Nunca Intentados (null)</option>
+                            <option value="CONNECTION_FAILED">Fallaron (CONNECTION_FAILED)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="margin-top: 8px;">
+                        <span class="text-sm font-bold" style="margin-right: 8px;">Portafolio:</span>
+                        <select id="druo-filter-portafolio" style="padding: 6px; border-radius: 4px; border: 1px solid var(--color-border);">
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="margin-top: 10px;">
+                        <span class="text-sm font-bold" style="margin-right: 8px;">Buscar inmueble:</span>
+                        <input id="druo-search-input" type="text" class="client-search-input" placeholder="Nombre o código...">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tabla DRUO -->
+            <section class="table-container">
+                <table id="druo-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:180px;">Inmueble</th>
+                            <th>Oportunidad</th>
+                            <th>Portafolio</th>
+                            <th>Fecha Entrega</th>
+                            <th>Status DRUO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="druo-tbody">
+                        <!-- Rows rendered by JS -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal"
+        style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-content"
+            style="background-color: white; margin: 5% auto; padding: 32px; border-radius: 18px; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+            <span class="close"
+                style="color: #6e6e73; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Scripts loaded sequentially with cache busting -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="supabaseConfig.js"></script>
+    <script src="logic.js?v=4.26"></script>
+    <script src="app.js?v=4.29"></script>
+    <script src="druo.js"></script>
+
+</body>
+
+</html>
