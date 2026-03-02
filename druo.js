@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('druo-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
+    const portfolioOverview = document.getElementById('portfolio-overview');
     const statusChipsEl = document.getElementById('status-chips');
     const portafolioChipsEl = document.getElementById('portafolio-chips');
     const searchInput = document.getElementById('druo-search-input');
@@ -100,6 +101,111 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiNull) kpiNull.textContent = pendientes.filter(d => !d.druo_status).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
+    }
+
+    function getOverviewRows() {
+        const byCode = new Map();
+        druoData.forEach(row => {
+            const key = row.codigo_inmueble || [
+                row.portafolio || 'sin-portafolio',
+                row.nombre_oportunidad || 'sin-nombre',
+                row.fecha_entrega || 'sin-fecha'
+            ].join('|');
+            const current = byCode.get(key);
+            if (!current) {
+                byCode.set(key, row);
+                return;
+            }
+
+            const currentScore = current.druo_status === 'CONNECTED'
+                ? 3
+                : current.druo_status === 'CONNECTION_FAILED'
+                    ? 2
+                    : current.druo_status
+                        ? 1
+                        : 0;
+            const nextScore = row.druo_status === 'CONNECTED'
+                ? 3
+                : row.druo_status === 'CONNECTION_FAILED'
+                    ? 2
+                    : row.druo_status
+                        ? 1
+                        : 0;
+
+            if (nextScore > currentScore) byCode.set(key, row);
+        });
+
+        const grouped = new Map();
+        [...byCode.values()].forEach(row => {
+            const portafolio = row.portafolio || 'Sin portafolio';
+            if (!grouped.has(portafolio)) {
+                grouped.set(portafolio, {
+                    portafolio,
+                    total: 0,
+                    failed: 0,
+                    sinIntentar: 0,
+                    connected: 0,
+                    discarded: 0,
+                    other: 0
+                });
+            }
+
+            const bucket = grouped.get(portafolio);
+            bucket.total += 1;
+
+            if (descartadosCodes.has(row.codigo_inmueble)) {
+                bucket.discarded += 1;
+            } else if (row.druo_status === 'CONNECTED') {
+                bucket.connected += 1;
+            } else if (row.druo_status === 'CONNECTION_FAILED') {
+                bucket.failed += 1;
+            } else if (!row.druo_status) {
+                bucket.sinIntentar += 1;
+            } else {
+                bucket.other += 1;
+            }
+        });
+
+        return [...grouped.values()].sort((a, b) => b.total - a.total || a.portafolio.localeCompare(b.portafolio));
+    }
+
+    function buildOverviewSegment(label, className, value, total) {
+        if (!value || !total) return '';
+        const width = Math.max((value / total) * 100, 2.5);
+        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" title="${label}: ${value}"></div>`;
+    }
+
+    function renderPortfolioOverview() {
+        if (!portfolioOverview) return;
+        const rows = getOverviewRows();
+
+        if (rows.length === 0) {
+            portfolioOverview.innerHTML = '<div class="overview-empty">No hay datos para construir el resumen por portafolio.</div>';
+            return;
+        }
+
+        portfolioOverview.innerHTML = rows.map(row => `
+            <div class="portfolio-row">
+                <div>
+                    <div class="portfolio-name">${row.portafolio}</div>
+                    <div class="portfolio-meta">
+                        <span>Fallidos ${row.failed}</span>
+                        <span>Sin intentar ${row.sinIntentar}</span>
+                        <span>Conectados ${row.connected}</span>
+                        <span>Descartados ${row.discarded}</span>
+                        ${row.other ? `<span>Otros ${row.other}</span>` : ''}
+                    </div>
+                </div>
+                <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}">
+                    ${buildOverviewSegment('Fallidos', 'stack-failed', row.failed, row.total)}
+                    ${buildOverviewSegment('Sin intentar', 'stack-null', row.sinIntentar, row.total)}
+                    ${buildOverviewSegment('Conectados', 'stack-connected', row.connected, row.total)}
+                    ${buildOverviewSegment('Descartados', 'stack-discarded', row.discarded, row.total)}
+                    ${buildOverviewSegment('Otros estados', 'stack-other', row.other, row.total)}
+                </div>
+                <div class="portfolio-total">${row.total} operativos</div>
+            </div>
+        `).join('');
     }
 
     // ----------------------------------------------------------------
@@ -387,7 +493,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingDiscardRow = null;
         closeModal('discard-modal');
         btn.disabled = false; btn.textContent = 'Descartar';
-        updateKPIs(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
     });
 
     // ----------------------------------------------------------------
@@ -398,7 +504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { alert('Error al restaurar.'); return; }
         descartados = descartados.filter(d => d.codigo_inmueble !== codigo_inmueble);
         descartadosCodes.delete(codigo_inmueble);
-        updateKPIs(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
     }
 
     // Helper exposed globally
@@ -447,6 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
 
     updateKPIs();
+    renderPortfolioOverview();
     buildStatusChips();
     buildPortafolioChips();
     buildConectadosPortFilter();

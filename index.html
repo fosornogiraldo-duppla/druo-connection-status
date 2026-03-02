@@ -221,6 +221,134 @@
             cursor: pointer;
         }
 
+        .overview-card {
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+            padding: 22px 24px;
+            margin-bottom: 18px;
+        }
+
+        .overview-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .overview-title {
+            margin: 0;
+            font-size: 20px;
+            color: #163c31;
+        }
+
+        .overview-subtitle {
+            margin: 6px 0 0 0;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .overview-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+        }
+
+        .portfolio-chart {
+            display: grid;
+            gap: 12px;
+        }
+
+        .portfolio-row {
+            display: grid;
+            grid-template-columns: minmax(140px, 200px) minmax(0, 1fr) 78px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .portfolio-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .portfolio-total {
+            font-size: 12px;
+            font-weight: 700;
+            color: #163c31;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .stack-track {
+            height: 18px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+
+        .stack-segment {
+            height: 100%;
+            min-width: 0;
+        }
+
+        .stack-failed {
+            background: #f87171;
+        }
+
+        .stack-null {
+            background: #facc15;
+        }
+
+        .stack-connected {
+            background: #4ade80;
+        }
+
+        .stack-discarded {
+            background: #94a3b8;
+        }
+
+        .stack-other {
+            background: #38bdf8;
+        }
+
+        .overview-empty {
+            padding: 22px;
+            border-radius: 14px;
+            background: #f8fafc;
+            color: #94a3b8;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .portfolio-meta {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #64748b;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         /* Tabs */
         .view-tabs {
             display: flex;
@@ -254,6 +382,17 @@
         .view-tab:hover:not(.active) {
             background: #f1f5f9;
             color: #334155;
+        }
+
+        @media (max-width: 860px) {
+            .portfolio-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .portfolio-total {
+                text-align: left;
+            }
         }
 
         /* Filters card */
@@ -569,6 +708,25 @@
                 </div>
             </div>
         </div>
+
+        <section class="overview-card">
+            <div class="overview-header">
+                <div>
+                    <h2 class="overview-title">Estado por portafolio</h2>
+                    <p class="overview-subtitle">Distribución apilada de inmuebles operativos por estado DRUO.</p>
+                </div>
+                <div class="overview-legend">
+                    <span class="legend-item"><span class="legend-dot stack-failed"></span>Fallidos</span>
+                    <span class="legend-item"><span class="legend-dot stack-null"></span>Sin intentar</span>
+                    <span class="legend-item"><span class="legend-dot stack-connected"></span>Conectados</span>
+                    <span class="legend-item"><span class="legend-dot stack-discarded"></span>Descartados</span>
+                    <span class="legend-item"><span class="legend-dot stack-other"></span>Otros estados</span>
+                </div>
+            </div>
+            <div id="portfolio-overview" class="portfolio-chart">
+                <div class="overview-empty">Cargando resumen por portafolio...</div>
+            </div>
+        </section>
 
         <!-- VIEW TABS -->
         <div class="view-tabs">
