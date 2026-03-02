@@ -513,12 +513,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="background:#fffbeb;padding:14px;border-radius:10px;border:1px dashed #fcd34d;">
                 <div style="font-size:10px;font-weight:700;color:#d97706;text-transform:uppercase;margin-bottom:7px;">💬 Remarks / Razón del Fallo</div>
                 <div style="font-size:13px;color:#92400e;white-space:pre-wrap;line-height:1.6;">${d.remarks || 'No hay remarks registrados.'}</div>
-                <div style="margin-top:10px;">
-                    <a href="https://developer.druo.com/enums-and-lists/account-status/" target="_blank" rel="noopener noreferrer"
-                        style="font-size:12px;font-weight:700;color:#0f766e;text-decoration:none;">
-                        Ver guía oficial de DRUO para interpretar account status y corregir remarks
-                    </a>
-                </div>
             </div>
         `;
         modal.style.display = 'flex';

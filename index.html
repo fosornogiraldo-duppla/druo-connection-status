@@ -127,6 +127,19 @@
             margin-bottom: 20px;
         }
 
+        .howto-section {
+            margin-bottom: 18px;
+        }
+
+        .howto-section-title {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #163c31;
+        }
+
         .step-card {
             background: #f8fafc;
             border-radius: 12px;
@@ -192,6 +205,21 @@
             height: 100%;
             border: none;
             border-radius: 10px;
+        }
+
+        .guide-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border: 1px dashed #cbd5e1;
+            margin-top: 16px;
+        }
+
+        .guide-card a {
+            color: #0f766e;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
         }
 
         .overview-card {
@@ -684,34 +712,53 @@
                 <span class="howto-chevron" id="howto-chevron">▼</span>
             </div>
             <div class="howto-body" id="howto-body">
-                <div class="steps-grid">
-                    <div class="step-card">
-                        <div class="step-num">1</div>
-                        <div class="step-title">Entrar a DRUO</div>
-                        <div class="step-desc">Entrar a la cuenta de <strong>DRUO de Duppla</strong>. Pide credenciales a
-                            <strong>Felipe Osorno-Giraldo</strong>.</div>
+                <div class="howto-section">
+                    <h3 class="howto-section-title">Botón</h3>
+                    <div class="steps-grid">
+                        <div class="step-card">
+                            <div class="step-num">1</div>
+                            <div class="step-title">Desde la app del cliente</div>
+                            <div class="step-desc">También puedes inscribir al cliente desde el botón
+                                <strong>Inscribe tu cuenta a débito automático</strong> en la app del cliente.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">2</div>
+                            <div class="step-title">Validar el estado</div>
+                            <div class="step-desc">Es probable que primero aparezca en <strong>Pending Connection</strong>.
+                                Revísalo unas horas después y debería pasar a <strong>Connected</strong>. Este campo también
+                                se integrará a Salesforce.</div>
+                        </div>
                     </div>
-                    <div class="step-card">
-                        <div class="step-num">2</div>
-                        <div class="step-title">Agregar o ubicar la cuenta</div>
-                        <div class="step-desc">Ve a la pestaña <strong>Accounts</strong> y da clic en
-                            <strong>Add New Account</strong>. Si el cliente ya existe en Salesforce, debería aparecer.
-                            Si no existe, créalo primero desde <strong>Users</strong>.</div>
-                    </div>
-                    <div class="step-card">
-                        <div class="step-num">3</div>
-                        <div class="step-title">Conectar la cuenta</div>
-                        <div class="step-desc">Selecciona <strong>Connect an Account</strong> y sigue todo el flujo de
-                            vinculación hasta que la cuenta quede creada y visible en DRUO. También puedes inscribir al
-                            cliente desde el botón <strong>Inscribe tu cuenta a débito automático</strong> en la app del
-                            cliente.</div>
-                    </div>
-                    <div class="step-card">
-                        <div class="step-num">4</div>
-                        <div class="step-title">Validar el estado</div>
-                        <div class="step-desc">Es probable que primero aparezca en <strong>Pending Connection</strong>.
-                            Revísalo unas horas después y debería pasar a <strong>Connected</strong>. Este campo también
-                            se integrará a Salesforce.</div>
+                </div>
+                <div class="howto-section">
+                    <h3 class="howto-section-title">Conexión Manual</h3>
+                    <div class="steps-grid">
+                        <div class="step-card">
+                            <div class="step-num">1</div>
+                            <div class="step-title">Entrar a DRUO</div>
+                            <div class="step-desc">Entrar a la cuenta de <strong>DRUO de Duppla</strong>. Pide credenciales a
+                                <strong>Felipe Osorno-Giraldo</strong>.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">2</div>
+                            <div class="step-title">Agregar o ubicar la cuenta</div>
+                            <div class="step-desc">Ve a la pestaña <strong>Accounts</strong> y da clic en
+                                <strong>Add New Account</strong>. Si el cliente ya existe en Salesforce, debería aparecer.
+                                Si no existe, créalo primero desde <strong>Users</strong>.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">3</div>
+                            <div class="step-title">Conectar la cuenta</div>
+                            <div class="step-desc">Selecciona <strong>Connect an Account</strong> y sigue todo el flujo de
+                                vinculación hasta que la cuenta quede creada y visible en DRUO.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">4</div>
+                            <div class="step-title">Validar el estado</div>
+                            <div class="step-desc">Es probable que primero aparezca en <strong>Pending Connection</strong>.
+                                Revísalo unas horas después y debería pasar a <strong>Connected</strong>. Este campo también
+                                se integrará a Salesforce.</div>
+                        </div>
                     </div>
                 </div>
                 <!-- Loom embed -->
@@ -723,6 +770,11 @@
                         <span style="font-size:14px; color:#94a3b8;">Video tutorial pendiente</span>
                         <span style="font-size:12px; color:#64748b;">El video se insertará directamente en esta sección</span>
                     </div>
+                </div>
+                <div class="guide-card">
+                    <div style="font-size:12px;font-weight:800;color:#334155;margin-bottom:6px;">Guía para connection failed</div>
+                    <div style="font-size:12px;color:#64748b;line-height:1.55;margin-bottom:8px;">Usa esta referencia oficial de DRUO para interpretar los <strong>remarks</strong> y entender cómo corregir cada caso.</div>
+                    <a href="https://developer.druo.com/enums-and-lists/account-status/" target="_blank" rel="noopener noreferrer">Ver guía oficial de account status</a>
                 </div>
             </div>
         </div>
