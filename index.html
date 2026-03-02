@@ -343,6 +343,8 @@
             height: 100%;
             min-width: 0;
             transition: filter 0.15s ease;
+            position: relative;
+            cursor: pointer;
         }
 
         .stack-segment:hover {
@@ -373,6 +375,29 @@
             color: #94a3b8;
             text-align: center;
             font-size: 13px;
+        }
+
+        .chart-tooltip {
+            position: fixed;
+            z-index: 1200;
+            pointer-events: none;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.94);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.35;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+            max-width: 220px;
+        }
+
+        .chart-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* Tabs */

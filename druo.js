@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiNull = document.getElementById('druo-kpi-null');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
     const kpiDescartados = document.getElementById('druo-kpi-descartados');
+    const chartTooltip = document.createElement('div');
+    chartTooltip.className = 'chart-tooltip';
+    document.body.appendChild(chartTooltip);
 
     let druoData = [];
     let descartados = [];
@@ -228,7 +231,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildOverviewSegment(label, className, value, total) {
         if (!value || !total) return '';
         const width = Math.max((value / total) * 100, 2.5);
-        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" title="${label}: ${value} de ${total} operativos"></div>`;
+        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" data-tooltip="${label}: ${value} de ${total} operativos"></div>`;
+    }
+
+    function moveChartTooltip(event) {
+        chartTooltip.style.left = `${event.clientX + 14}px`;
+        chartTooltip.style.top = `${event.clientY + 14}px`;
+    }
+
+    function hideChartTooltip() {
+        chartTooltip.classList.remove('visible');
     }
 
     function renderPortfolioOverview() {
@@ -251,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span>${row.portafolio}</span>
                     <span class="portfolio-total-inline">${row.total} operativos</span>
                 </div>
-                <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}" title="${row.portafolio}: ${row.total} operativos">
+                <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}">
                     ${buildOverviewSegment(`${row.portafolio} · No están en DRUO`, 'stack-null', row.sinIntentar, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Desconectados`, 'stack-failed', row.failed, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Conectados`, 'stack-connected', row.connected, row.total)}
@@ -568,6 +580,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
+    if (portfolioOverview) {
+        portfolioOverview.addEventListener('mousemove', event => {
+            const segment = event.target.closest('.stack-segment');
+            if (!segment) {
+                hideChartTooltip();
+                return;
+            }
+
+            chartTooltip.textContent = segment.dataset.tooltip || '';
+            moveChartTooltip(event);
+            chartTooltip.classList.add('visible');
+        });
+        portfolioOverview.addEventListener('mouseleave', hideChartTooltip);
+    }
 
     const clearPortBtn = document.getElementById('clear-portafolios');
     if (clearPortBtn) {
