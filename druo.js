@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ---- DOM refs ----
     const tableBody = document.getElementById('druo-tbody');
+    const comercialBody = document.getElementById('comercial-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
     const portfolioOverview = document.getElementById('portfolio-overview');
@@ -10,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusChipsEl = document.getElementById('status-chips');
     const portafolioChipsEl = document.getElementById('portafolio-chips');
     const searchInput = document.getElementById('druo-search-input');
+    const comercialSearch = document.getElementById('comercial-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
 
@@ -139,6 +141,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
+    }
+
+    function isCommercialPortfolio(portafolio) {
+        const raw = (portafolio || '').trim();
+        if (!raw) return false;
+
+        const normalized = raw
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+
+        if (normalized.includes('progresion')) return true;
+
+        const match = normalized.match(/duppla beneficio\s+(\d+)/);
+        if (!match) return false;
+
+        return Number(match[1]) >= 6;
     }
 
     function getOverviewRows() {
@@ -399,6 +418,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function renderComercial() {
+        if (!comercialBody) return;
+        const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
+
+        const filtered = druoData
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => !isConnectedStatus(d.druo_status))
+            .filter(d => isCommercialPortfolio(d.portafolio))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
+
+        const cc = document.getElementById('comercial-count');
+        if (cc) cc.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+
+        comercialBody.innerHTML = '';
+        if (filtered.length === 0) {
+            comercialBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            return;
+        }
+
+        filtered.forEach(d => {
+            const isFailed = isDisconnectedStatus(d.druo_status);
+            const badge = statusBadge(d.druo_status, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${d.nombre_oportunidad || '-'}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
+                <td>${badge}</td>
+                <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
+            `;
+            row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
+            row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
+            comercialBody.appendChild(row);
+        });
+    }
+
     // ----------------------------------------------------------------
     // Render: Conectados table
     // ----------------------------------------------------------------
@@ -578,6 +637,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Event listeners
     // ----------------------------------------------------------------
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
+    if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
     if (portfolioOverview) {
@@ -636,6 +696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildPortafolioChips();
     buildConectadosPortFilter();
     renderTable();
+    renderComercial();
     renderDescartados();
     renderConectados();
 });
