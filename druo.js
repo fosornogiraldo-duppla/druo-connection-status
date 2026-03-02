@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiTotal) kpiTotal.textContent = activos.length;
         if (kpiFailed) kpiFailed.textContent = activos.filter(d => d.druo_status === 'CONNECTION_FAILED').length;
         if (kpiNull) kpiNull.textContent = activos.filter(d => !d.druo_status).length;
-        if (kpiConectados) kpiConectados.textContent = conectadosData.length > 0 ? conectadosData.length : '—';
+        if (kpiConectados) kpiConectados.textContent = (conectadosData && conectadosData.length > 0) ? conectadosData.length : '—';
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
     }
 
