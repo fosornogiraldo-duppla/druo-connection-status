@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
     const portfolioOverview = document.getElementById('portfolio-overview');
+    const overviewTotalActivos = document.getElementById('overview-total-activos');
     const statusChipsEl = document.getElementById('status-chips');
     const portafolioChipsEl = document.getElementById('portafolio-chips');
     const searchInput = document.getElementById('druo-search-input');
@@ -233,6 +234,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderPortfolioOverview() {
         if (!portfolioOverview) return;
         const rows = getOverviewRows();
+        const totalActivos = rows.reduce((acc, row) => acc + row.total, 0);
+
+        if (overviewTotalActivos) {
+            overviewTotalActivos.textContent = `Total inmuebles operativos: ${totalActivos}`;
+        }
 
         if (rows.length === 0) {
             portfolioOverview.innerHTML = '<div class="overview-empty">No hay datos para construir el resumen por portafolio.</div>';
@@ -241,7 +247,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         portfolioOverview.innerHTML = rows.map(row => `
             <div class="portfolio-row">
-                <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">${row.portafolio}</div>
+                <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">
+                    <span>${row.portafolio}</span>
+                    <span class="portfolio-total-inline">${row.total} operativos</span>
+                </div>
                 <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}" title="${row.portafolio}: ${row.total} operativos">
                     ${buildOverviewSegment(`${row.portafolio} · No están en DRUO`, 'stack-null', row.sinIntentar, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Desconectados`, 'stack-failed', row.failed, row.total)}

@@ -275,6 +275,13 @@
             margin-bottom: 14px;
         }
 
+        .overview-total {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 14px;
+        }
+
         .legend-item {
             display: inline-flex;
             align-items: center;
@@ -309,6 +316,17 @@
             color: #334155;
             line-height: 1.35;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .portfolio-total-inline {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            white-space: nowrap;
         }
 
         .stack-track {
@@ -727,6 +745,7 @@
                     <span class="legend-item"><span class="legend-dot stack-connected"></span>Conectados</span>
                     <span class="legend-item"><span class="legend-dot stack-discarded"></span>Descartados</span>
                 </div>
+                <div class="overview-total" id="overview-total-activos">Total inmuebles operativos: —</div>
                 <div id="portfolio-overview" class="portfolio-chart">
                     <div class="overview-empty">Cargando resumen por portafolio...</div>
                 </div>
