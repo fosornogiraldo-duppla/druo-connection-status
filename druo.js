@@ -104,6 +104,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getOverviewRows() {
+        const normalizePortfolioName = value => (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+        const pinnedPortfolioOrder = new Map([
+            ['skandia', 0],
+            ['we seed', 1],
+            ['progresion', 999]
+        ]);
+
         const byCode = new Map();
         druoData.forEach(row => {
             const key = row.codigo_inmueble || [
@@ -166,7 +177,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        return [...grouped.values()].sort((a, b) => b.total - a.total || a.portafolio.localeCompare(b.portafolio));
+        return [...grouped.values()].sort((a, b) => {
+            const aPinned = pinnedPortfolioOrder.get(normalizePortfolioName(a.portafolio));
+            const bPinned = pinnedPortfolioOrder.get(normalizePortfolioName(b.portafolio));
+
+            if (aPinned !== undefined || bPinned !== undefined) {
+                if (aPinned === undefined) return bPinned === 999 ? -1 : 1;
+                if (bPinned === undefined) return aPinned === 999 ? 1 : -1;
+                if (aPinned !== bPinned) return aPinned - bPinned;
+            }
+
+            return a.portafolio.localeCompare(b.portafolio, 'es', { sensitivity: 'base' });
+        });
     }
 
     function buildOverviewSegment(label, className, value, total) {
