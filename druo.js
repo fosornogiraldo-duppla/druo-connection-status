@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildOverviewSegment(label, className, value, total) {
         if (!value || !total) return '';
         const width = Math.max((value / total) * 100, 2.5);
-        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" title="${label}: ${value}"></div>`;
+        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" title="${label}: ${value} de ${total} operativos"></div>`;
     }
 
     function renderPortfolioOverview() {
@@ -208,24 +208,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         portfolioOverview.innerHTML = rows.map(row => `
             <div class="portfolio-row">
-                <div>
-                    <div class="portfolio-name">${row.portafolio}</div>
-                    <div class="portfolio-meta">
-                        <span>Fallidos ${row.failed}</span>
-                        <span>Sin intentar ${row.sinIntentar}</span>
-                        <span>Conectados ${row.connected}</span>
-                        <span>Descartados ${row.discarded}</span>
-                        ${row.other ? `<span>Otros ${row.other}</span>` : ''}
-                    </div>
+                <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">${row.portafolio}</div>
+                <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}" title="${row.portafolio}: ${row.total} operativos">
+                    ${buildOverviewSegment(`${row.portafolio} · Fallidos`, 'stack-failed', row.failed, row.total)}
+                    ${buildOverviewSegment(`${row.portafolio} · Sin intentar`, 'stack-null', row.sinIntentar, row.total)}
+                    ${buildOverviewSegment(`${row.portafolio} · Conectados`, 'stack-connected', row.connected, row.total)}
+                    ${buildOverviewSegment(`${row.portafolio} · Descartados`, 'stack-discarded', row.discarded, row.total)}
+                    ${buildOverviewSegment(`${row.portafolio} · Otros estados`, 'stack-other', row.other, row.total)}
                 </div>
-                <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}">
-                    ${buildOverviewSegment('Fallidos', 'stack-failed', row.failed, row.total)}
-                    ${buildOverviewSegment('Sin intentar', 'stack-null', row.sinIntentar, row.total)}
-                    ${buildOverviewSegment('Conectados', 'stack-connected', row.connected, row.total)}
-                    ${buildOverviewSegment('Descartados', 'stack-discarded', row.discarded, row.total)}
-                    ${buildOverviewSegment('Otros estados', 'stack-other', row.other, row.total)}
-                </div>
-                <div class="portfolio-total">${row.total} operativos</div>
             </div>
         `).join('');
     }
