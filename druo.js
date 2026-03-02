@@ -160,6 +160,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Number(match[1]) >= 6;
     }
 
+    function comparePortafolios(a, b) {
+        const normalize = value => (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+
+        const getNumericPortfolio = value => {
+            const match = normalize(value).match(/duppla beneficio\s+(\d+)/);
+            return match ? Number(match[1]) : null;
+        };
+
+        const aNum = getNumericPortfolio(a);
+        const bNum = getNumericPortfolio(b);
+        const aNamed = aNum === null;
+        const bNamed = bNum === null;
+
+        if (aNamed && !bNamed) return -1;
+        if (!aNamed && bNamed) return 1;
+        if (aNamed && bNamed) return a.localeCompare(b, 'es', { sensitivity: 'base' });
+
+        return aNum - bNum || a.localeCompare(b, 'es', { sensitivity: 'base' });
+    }
+
     function getOverviewRows() {
         const normalizePortfolioName = value => (value || '')
             .normalize('NFD')
@@ -333,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildPortafolioChips() {
         if (!portafolioChipsEl) return;
         const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort();
+        const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
         portafolioChipsEl.innerHTML = '';
         ports.forEach(p => {
@@ -500,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
             druoData.filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
-        )].sort();
+        )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
             const opt = document.createElement('option');
