@@ -4,141 +4,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRUO Connection Status</title>
+    <title>DRUO Connection Status | Duppla</title>
+    <meta name="description" content="Dashboard de estado de conexión de clientes a DRUO - Duppla">
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            background-color: #f8fafc;
+        /* ---- Portafolio Chips ---- */
+        .portafolio-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid var(--color-border, #e2e8f0);
+            background: white;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
         }
 
-        .druo-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .portafolio-chip:hover {
+            border-color: var(--color-brand-dark);
+            color: var(--color-brand-dark);
+            background: #f0fdf4;
+        }
+
+        .portafolio-chip.active {
+            background: var(--color-brand-dark);
+            color: white;
+            border-color: var(--color-brand-dark);
+        }
+
+        .chips-scroll {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .chip-clear-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px dashed #cbd5e1;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .chip-clear-btn:hover {
+            color: #ef4444;
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        /* ---- Layout ---- */
+        #druo-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        #druo-table td,
+        #druo-table th {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        #druo-table th {
+            color: #94a3b8;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            background: #f8fafc;
+        }
+
+        #druo-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1.5px solid var(--color-border, #e2e8f0);
+            background: white;
+            font-family: inherit;
+            font-size: 14px;
+            color: #334155;
+            cursor: pointer;
+            min-width: 200px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .search-input {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1.5px solid var(--color-border, #e2e8f0);
+            background: white;
+            font-family: inherit;
+            font-size: 14px;
+            color: #334155;
+            min-width: 260px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-brand-dark);
         }
 
         .hero {
             background: var(--color-brand-dark);
             color: white;
-            padding: 32px;
-            border-radius: 16px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 32px 40px;
+            border-radius: 20px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
         }
 
         .hero h1 {
-            font-size: 28px;
-            margin: 0 0 8px 0;
+            font-size: 26px;
+            margin: 0 0 6px 0;
         }
 
         .hero p {
-            opacity: 0.8;
+            opacity: 0.75;
             margin: 0;
+            font-size: 14px;
         }
 
-        /* Badge styling override based on DRUO requirements */
-        .badge.druo-failed {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
+        .druo-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 28px 24px;
         }
 
-        .badge.druo-null {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid #cbd5e1;
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .filter-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .active-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
         }
     </style>
 </head>
 
-<body>
+<body style="background: #f1f5f9; min-height: 100vh;">
 
     <div class="druo-container">
-        <!-- HEADER -->
-        <header class="hero">
-            <h1>DRUO Connection Status</h1>
-            <p class="text-sm">Monitoreo de estado de conexión de clientes a DRUO</p>
-        </header>
 
-        <!-- KPIs DRUO -->
-        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
-            <div class="kpi-card"
-                style="background-color: white; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
-                <div class="kpi-value highlight" id="druo-kpi-total">0</div>
-                <div class="text-sm" style="color: var(--color-text-secondary); font-weight: 500;">Total No Conectados
+        <!-- HERO HEADER -->
+        <header class="hero">
+            <div>
+                <h1>🔌 DRUO Connection Status</h1>
+                <p>Clientes que aún no están conectados a DRUO</p>
+            </div>
+            <div style="display: flex; gap: 12px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
+                <!-- KPI chips in header -->
+                <div
+                    style="background: rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 100px;">
+                    <div id="druo-kpi-total" style="font-size: 28px; font-weight: 800; line-height: 1;">0</div>
+                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Total</div>
+                </div>
+                <div
+                    style="background: rgba(239,68,68,0.2); border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 100px;">
+                    <div id="druo-kpi-failed"
+                        style="font-size: 28px; font-weight: 800; line-height: 1; color: #fca5a5;">0</div>
+                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Fallidos</div>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 100px;">
+                    <div id="druo-kpi-null" style="font-size: 28px; font-weight: 800; line-height: 1; color: #94a3b8;">0
+                    </div>
+                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">Sin intentar</div>
                 </div>
             </div>
-            <div class="kpi-card"
-                style="background-color: white; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
-                <div class="kpi-value text-danger" id="druo-kpi-failed">0</div>
-                <div class="text-sm" style="color: var(--color-text-secondary); font-weight: 500;">Fallaron
-                    (CONNECTION_FAILED)</div>
-            </div>
-            <div class="kpi-card"
-                style="background-color: white; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
-                <div class="kpi-value" style="color: #475569;" id="druo-kpi-null">0</div>
-                <div class="text-sm" style="color: var(--color-text-secondary); font-weight: 500;">Nunca Intentados
-                    (null)</div>
-            </div>
-        </div>
+        </header>
 
         <!-- FILTROS -->
-        <section class="table-container" style="margin-bottom: 32px; padding: 24px;">
-            <div class="filters-header">
-                <span class="text-sm font-bold" style="font-size: 16px;">Filtros de Búsqueda</span>
-            </div>
-            <div id="filters-content-druo" style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px;">
-                <div class="filter-group" style="flex: 1; min-width: 200px;">
-                    <span class="text-sm font-bold" style="display: block; margin-bottom: 8px;">Status:</span>
-                    <select id="druo-filter-status"
-                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: #f8fafc; font-family: inherit;">
-                        <option value="all">Todos</option>
-                        <option value="null">Nunca Intentados (null)</option>
+        <section class="table-container" style="margin-bottom: 24px; padding: 28px;">
+
+            <!-- Row 1: Status + Search -->
+            <div class="filter-row">
+                <div class="filter-col">
+                    <div class="section-label">Status DRUO</div>
+                    <select id="druo-filter-status" class="filter-select">
+                        <option value="all">Todos los status</option>
+                        <option value="null">Nunca intentados (null)</option>
                         <option value="CONNECTION_FAILED">Fallaron (CONNECTION_FAILED)</option>
                     </select>
                 </div>
-                <div class="filter-group" style="flex: 1; min-width: 200px;">
-                    <span class="text-sm font-bold" style="display: block; margin-bottom: 8px;">Portafolio:</span>
-                    <select id="druo-filter-portafolio"
-                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: #f8fafc; font-family: inherit;">
-                        <option value="all">Todos</option>
-                    </select>
+                <div class="filter-col" style="flex: 1; min-width: 260px;">
+                    <div class="section-label">Buscar inmueble o cliente</div>
+                    <input id="druo-search-input" type="text" class="search-input" placeholder="🔍  Nombre o código...">
                 </div>
-                <div class="filter-group" style="flex: 1; min-width: 250px;">
-                    <span class="text-sm font-bold" style="display: block; margin-bottom: 8px;">Buscar:</span>
-                    <input id="druo-search-input" type="text" class="client-search-input"
-                        placeholder="Nombre de oportunidad o código..."
-                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: #f8fafc;">
+                <div class="filter-col" style="justify-content: flex-end; margin-left: auto;">
+                    <div class="section-label">&nbsp;</div>
+                    <span id="result-count" style="font-size: 13px; color: #94a3b8; padding-top: 10px;">—
+                        resultados</span>
+                </div>
+            </div>
+
+            <!-- Row 2: Portafolio chips -->
+            <div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                    <div class="section-label" style="margin-bottom:0;">Portafolio</div>
+                    <span id="portafolio-count" class="active-badge"
+                        style="background: #e2e8f0; color: #475569;">Todos</span>
+                    <button id="clear-portafolios" class="chip-clear-btn">✕ Limpiar selección</button>
+                </div>
+                <div id="portafolio-chips" class="chips-scroll">
+                    <!-- Generated by JS -->
+                    <span style="color: #94a3b8; font-size: 13px;">Cargando portafolios...</span>
                 </div>
             </div>
         </section>
 
         <!-- TABLA -->
-        <section class="table-container">
-            <table id="druo-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <section class="table-container" style="padding: 0; overflow: hidden;">
+            <table id="druo-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
-                        <th
-                            style="padding: 16px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase;">
-                            Inmueble</th>
-                        <th
-                            style="padding: 16px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase;">
-                            Oportunidad</th>
-                        <th
-                            style="padding: 16px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase;">
-                            Portafolio</th>
-                        <th
-                            style="padding: 16px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase;">
-                            Fecha Entrega</th>
-                        <th
-                            style="padding: 16px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase;">
-                            Status DRUO</th>
+                        <th style="min-width: 160px;">Código Inmueble</th>
+                        <th>Oportunidad / Cliente</th>
+                        <th>Portafolio</th>
+                        <th>Fecha Entrega</th>
+                        <th>Status DRUO</th>
                     </tr>
                 </thead>
                 <tbody id="druo-tbody">
-                    <!-- Rows rendered by JS -->
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px;">Cargando datos...</td>
+                        <td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Cargando datos...</td>
                     </tr>
                 </tbody>
             </table>
@@ -146,13 +274,13 @@
 
     </div>
 
-    <!-- Info Modal -->
-    <div id="infoModal" class="modal"
-        style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="modal-content"
-            style="background-color: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; margin: 10vh auto;">
-            <span class="close" id="modal-close"
-                style="color: #94a3b8; position: absolute; right: 24px; top: 24px; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+    <!-- MODAL -->
+    <div id="infoModal"
+        style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding: 20px; box-sizing: border-box;">
+        <div
+            style="background:white; padding:40px; border-radius:20px; width:100%; max-width:580px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.25); position:relative; margin: 0 auto;">
+            <button id="modal-close"
+                style="position:absolute; right:20px; top:16px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer; line-height:1; padding:4px 8px; border-radius:6px;">&times;</button>
             <div id="modalBody"></div>
         </div>
     </div>
