@@ -394,6 +394,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${bg};color:${color};border:1px solid ${border};">${displayStatusLabel(status)}</span>`;
     }
 
+    function remarksCell(remarks) {
+        const text = (remarks || '').toString().trim();
+        if (!text) return '<span style="color:#cbd5e1;">-</span>';
+        return `<div style="max-width:320px;font-size:12px;line-height:1.45;color:#475569;white-space:pre-wrap;word-break:break-word;">${text}</div>`;
+    }
+
     // ----------------------------------------------------------------
     // Render: Pendientes table
     // ----------------------------------------------------------------
@@ -419,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (filtered.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -434,6 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
+                <td>${remarksCell(d.remarks)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -459,7 +466,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (filtered.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -474,6 +481,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
+                <td>${remarksCell(d.remarks)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -540,7 +548,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!descartadosBody) return;
         descartadosBody.innerHTML = '';
         if (descartados.length === 0) {
-            descartadosBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
+            descartadosBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
             return;
         }
         descartados.forEach(d => {
@@ -554,6 +562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${statusBadge(d.druo_status, isFailed)}</td>
+                <td>${remarksCell(d.remarks)}</td>
                 <td style="color:#475569;font-size:12px;max-width:200px;">${d.razon_descarte || '-'}</td>
                 <td style="color:#94a3b8;font-size:12px;">${date}</td>
                 <td><button class="btn-restore" data-code="${d.codigo_inmueble}">Restaurar</button></td>
