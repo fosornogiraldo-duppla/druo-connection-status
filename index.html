@@ -179,6 +179,205 @@
             line-height: 1.5;
         }
 
+        .step-note {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .screen-guide {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+
+        .screen-card {
+            background: #fff;
+            border: 1px solid #dbe4ee;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .screen-topbar {
+            background: #0c3322;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .screen-topbar span:last-child {
+            opacity: 0.72;
+            font-weight: 600;
+        }
+
+        .screen-content {
+            padding: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .screen-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #0f766e;
+            margin-bottom: 6px;
+        }
+
+        .screen-heading {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .screen-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .screen-action {
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #f8fafc;
+            border: 1px solid #dbe4ee;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .screen-action.primary {
+            background: #0f766e;
+            border-color: #0f766e;
+            color: white;
+        }
+
+        .screen-search {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #dbe4ee;
+            background: white;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .screen-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .screen-list-item {
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+        }
+
+        .screen-list-item strong {
+            display: block;
+            color: #334155;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .screen-list-item span {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .screen-status {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: #d1fae5;
+            color: #047857;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 8px;
+            margin-top: 6px;
+        }
+
+        .screen-footer-note {
+            margin-top: 10px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #64748b;
+        }
+
+        .screen-link-box {
+            display: flex;
+            align-items: stretch;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #dbe4ee;
+            margin-bottom: 10px;
+        }
+
+        .screen-link-value {
+            flex: 1;
+            background: white;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .screen-link-copy {
+            background: #f1f5f9;
+            border-left: 1px solid #dbe4ee;
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #0f766e;
+        }
+
+        .screen-salesforce {
+            border-radius: 12px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 12px;
+        }
+
+        .screen-salesforce-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1e3a8a;
+            margin-bottom: 6px;
+        }
+
+        .screen-salesforce-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            background: white;
+            border: 1px solid #bfdbfe;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
         .commercial-button-card {
             background: #f8fafc;
             border-radius: 14px;
@@ -802,67 +1001,137 @@
             </div>
             <div class="howto-body" id="howto-body">
                 <div class="howto-section">
-                    <h3 class="howto-section-title">Botón</h3>
+                    <h3 class="howto-section-title">Proceso</h3>
                     <div class="steps-grid">
                         <div class="step-card">
                             <div class="step-num">1</div>
-                            <div class="step-title">Desde la app del cliente</div>
-                            <div class="step-desc">También puedes inscribir al cliente desde el botón
-                                <strong>Inscribe tu cuenta a débito automático</strong> en la app del cliente.</div>
+                            <div class="step-title">Entrar al portal</div>
+                            <div class="step-desc">Entra a <strong>Portal de Pagos</strong> desde
+                                <strong>blackbox.duppla.co/druo-admin</strong> y abre la opción
+                                <strong>Conectar Cuenta</strong>.</div>
                         </div>
                         <div class="step-card">
                             <div class="step-num">2</div>
-                            <div class="step-title">Validar el estado</div>
-                            <div class="step-desc">Es probable que primero aparezca en <strong>Pending Connection</strong>.
-                                Revísalo unas horas después y debería pasar a <strong>Connected</strong>. Este campo también
-                                se integrará a Salesforce.</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="howto-section">
-                    <h3 class="howto-section-title">Conexión Manual</h3>
-                    <div class="steps-grid">
-                        <div class="step-card">
-                            <div class="step-num">1</div>
-                            <div class="step-title">Entrar a DRUO</div>
-                            <div class="step-desc">Entrar a la cuenta de <strong>DRUO de Duppla</strong>. Pide credenciales a
-                                <strong>Felipe Osorno-Giraldo</strong>.</div>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-num">2</div>
-                            <div class="step-title">Agregar o ubicar la cuenta</div>
-                            <div class="step-desc">Ve a la pestaña <strong>Accounts</strong> y da clic en
-                                <strong>Add New Account</strong>. Si el cliente ya existe en Salesforce, debería aparecer.
-                                Si no existe, créalo primero desde <strong>Users</strong>.</div>
+                            <div class="step-title">Buscar cliente</div>
+                            <div class="step-desc">En la pantalla de <strong>Conectar Cuenta Bancaria</strong>, usa la barra
+                                <strong>Buscar cliente</strong> para encontrar al cliente correcto.</div>
                         </div>
                         <div class="step-card">
                             <div class="step-num">3</div>
-                            <div class="step-title">Conectar la cuenta</div>
-                            <div class="step-desc">Selecciona <strong>Connect an Account</strong> y sigue todo el flujo de
-                                vinculación hasta que la cuenta quede creada y visible en DRUO.</div>
+                            <div class="step-title">Crear sesión de conexión</div>
+                            <div class="step-desc">Selecciona el cliente y haz clic en
+                                <strong>Crear Sesión de Conexión</strong>.</div>
                         </div>
                         <div class="step-card">
                             <div class="step-num">4</div>
-                            <div class="step-title">Validar el estado</div>
-                            <div class="step-desc">Es probable que primero aparezca en <strong>Pending Connection</strong>.
-                                Revísalo unas horas después y debería pasar a <strong>Connected</strong>. Este campo también
-                                se integrará a Salesforce.</div>
+                            <div class="step-title">Copiar y compartir link</div>
+                            <div class="step-desc">El sistema generará un <strong>link de conexión</strong>. Cópialo y compártelo con el cliente para que termine el proceso.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">5</div>
+                            <div class="step-title">Esperar confirmación en Salesforce</div>
+                            <div class="step-desc">Cuando el cliente complete el flujo, valida en Salesforce que quede marcado el check
+                                <strong>Autorización débito automático</strong>.</div>
+                            <div class="step-note">No se considera completo hasta que ese check quede actualizado.</div>
                         </div>
                     </div>
                 </div>
-                <h3 class="howto-section-title spaced">BOTÓN DE CONEXIÓN PARA COMERCIALES</h3>
+
+                <div class="howto-section">
+                    <h3 class="howto-section-title">Guía visual</h3>
+                    <div class="screen-guide">
+                        <div class="screen-card">
+                            <div class="screen-topbar">
+                                <span>Portal de Pagos</span>
+                                <span>Paso 1</span>
+                            </div>
+                            <div class="screen-content">
+                                <div class="screen-kicker">Inicio</div>
+                                <div class="screen-heading">Entrar y abrir Conectar Cuenta</div>
+                                <div class="screen-row">
+                                    <span class="screen-action primary">+ Crear Link de Pago</span>
+                                    <span class="screen-action">Conectar Cuenta</span>
+                                    <span class="screen-action">Actualizar</span>
+                                </div>
+                                <div class="screen-footer-note">Desde Portal de Pagos, entra al flujo correcto dando clic en <strong>Conectar Cuenta</strong>.</div>
+                            </div>
+                        </div>
+
+                        <div class="screen-card">
+                            <div class="screen-topbar">
+                                <span>Clientes Elegibles</span>
+                                <span>Paso 2</span>
+                            </div>
+                            <div class="screen-content">
+                                <div class="screen-kicker">Búsqueda</div>
+                                <div class="screen-heading">Encontrar al cliente</div>
+                                <div class="screen-search">Nombre o email...</div>
+                                <div class="screen-list">
+                                    <div class="screen-list-item">
+                                        <strong>Carlos Hernando Botía Sánchez</strong>
+                                        <span>carlosbotiasanchez@gmail.com</span>
+                                        <span class="screen-status">Registrado en Druo (sin cuenta bancaria)</span>
+                                    </div>
+                                </div>
+                                <div class="screen-footer-note">Busca por nombre o correo y confirma que sea el cliente correcto antes de continuar.</div>
+                            </div>
+                        </div>
+
+                        <div class="screen-card">
+                            <div class="screen-topbar">
+                                <span>Crear Sesión</span>
+                                <span>Paso 3</span>
+                            </div>
+                            <div class="screen-content">
+                                <div class="screen-kicker">Acción</div>
+                                <div class="screen-heading">Crear sesión de conexión</div>
+                                <div class="screen-list-item" style="margin-bottom:10px;">
+                                    <strong>Wilson López Díaz</strong>
+                                    <span>wlopezelecolbta@hotmail.com</span>
+                                    <span class="screen-status">Cerrada Ganada</span>
+                                </div>
+                                <div class="screen-row">
+                                    <span class="screen-action">Cancelar</span>
+                                    <span class="screen-action primary">Crear Sesión de Conexión</span>
+                                </div>
+                                <div class="screen-footer-note">Selecciona el cliente y crea la sesión para generar el enlace individual.</div>
+                            </div>
+                        </div>
+
+                        <div class="screen-card">
+                            <div class="screen-topbar">
+                                <span>Link Creado</span>
+                                <span>Paso 4 y 5</span>
+                            </div>
+                            <div class="screen-content">
+                                <div class="screen-kicker">Entrega y seguimiento</div>
+                                <div class="screen-heading">Copiar link y esperar check en Salesforce</div>
+                                <div class="screen-link-box">
+                                    <div class="screen-link-value">https://link.druo.com/connect/secure?...</div>
+                                    <div class="screen-link-copy">Copiar</div>
+                                </div>
+                                <div class="screen-salesforce">
+                                    <div class="screen-salesforce-title">Validación final en Salesforce</div>
+                                    <div class="screen-salesforce-check">✓ Autorización débito automático</div>
+                                </div>
+                                <div class="screen-footer-note">Comparte el link con el cliente y haz seguimiento hasta que en Salesforce aparezca marcado el check <strong>Autorización débito automático</strong>.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="howto-section-title spaced">BOTÓN DE CONEXIÓN</h3>
                 <div class="commercial-button-card">
                     <div class="commercial-button-row">
                         <div class="commercial-button-note">
-                            Este botón quedará aquí como acceso directo para el flujo comercial. Por ahora funciona solo como placeholder mientras terminamos la implementación.
+                            Acceso directo al Portal de Pagos para entrar a Conectar Cuenta, buscar el cliente y generar el link de conexión.
                         </div>
-                        <button type="button" class="commercial-button-cta">Conectar un cliente</button>
+                        <a href="https://blackbox.duppla.co/druo-admin" target="_blank" rel="noopener noreferrer"
+                            class="commercial-button-cta"
+                            style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+                            Conectar un cliente
+                        </a>
                     </div>
-                </div>
-                <h3 class="howto-section-title spaced">SOLUCIÓN DE FALLAS EN CONEXIÓN</h3>
-                <div class="guide-card">
-                    <div style="font-size:12px;color:#64748b;line-height:1.55;margin-bottom:8px;">Usa esta referencia oficial de DRUO para interpretar los <strong>remarks</strong> y entender cómo corregir cada caso.</div>
-                    <a href="https://developer.druo.com/enums-and-lists/account-status/" target="_blank" rel="noopener noreferrer">Ver guía oficial de account status</a>
                 </div>
             </div>
         </div>
