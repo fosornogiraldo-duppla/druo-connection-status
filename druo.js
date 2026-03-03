@@ -192,8 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .trim();
         const pinnedPortfolioOrder = new Map([
             ['skandia', 0],
-            ['we seed', 1],
-            ['progresion', 999]
+            ['progresion', 1]
         ]);
 
         const byCode = new Map();
@@ -262,12 +261,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const bPinned = pinnedPortfolioOrder.get(normalizePortfolioName(b.portafolio));
 
             if (aPinned !== undefined || bPinned !== undefined) {
-                if (aPinned === undefined) return bPinned === 999 ? -1 : 1;
-                if (bPinned === undefined) return aPinned === 999 ? 1 : -1;
+                if (aPinned === undefined) return 1;
+                if (bPinned === undefined) return -1;
                 if (aPinned !== bPinned) return aPinned - bPinned;
             }
 
-            return a.portafolio.localeCompare(b.portafolio, 'es', { sensitivity: 'base' });
+            return comparePortafolios(a.portafolio, b.portafolio);
         });
     }
 
