@@ -30,6 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedPortafolios = new Set();
     let selectedStatuses = new Set(); // empty = all statuses
     let pendingDiscardRow = null;
+    const tableSortState = {
+        pendientes: { key: null, direction: 'asc' },
+        comercial: { key: null, direction: 'asc' },
+        conectados: { key: null, direction: 'asc' },
+        descartados: { key: null, direction: 'asc' }
+    };
 
     // ----------------------------------------------------------------
     // URL params
@@ -182,6 +188,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (aNamed && bNamed) return a.localeCompare(b, 'es', { sensitivity: 'base' });
 
         return aNum - bNum || a.localeCompare(b, 'es', { sensitivity: 'base' });
+    }
+
+    function compareText(a, b) {
+        return (a || '').toString().localeCompare((b || '').toString(), 'es', {
+            sensitivity: 'base',
+            numeric: true
+        });
+    }
+
+    function getRowSortValue(row, key) {
+        if (key === 'portafolio') return row.portafolio || 'Sin portafolio';
+        if (key === 'druo_status') return displayStatusLabel(row.druo_status);
+        if (key === 'fecha_entrega' || key === 'descartado_at') return row[key] ? new Date(row[key]).getTime() : Number.NEGATIVE_INFINITY;
+        return row[key] ?? '';
+    }
+
+    function compareRowsByKey(a, b, key) {
+        if (key === 'portafolio') return comparePortafolios(a.portafolio || 'Sin portafolio', b.portafolio || 'Sin portafolio');
+
+        const aValue = getRowSortValue(a, key);
+        const bValue = getRowSortValue(b, key);
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return aValue - bValue;
+        }
+
+        return compareText(aValue, bValue);
+    }
+
+    function sortRows(rows, tableName) {
+        const state = tableSortState[tableName];
+        if (!state || !state.key) return rows;
+
+        const direction = state.direction === 'desc' ? -1 : 1;
+        return [...rows].sort((a, b) => direction * compareRowsByKey(a, b, state.key));
+    }
+
+    function updateSortHeaders() {
+        document.querySelectorAll('th.th-sortable').forEach(th => {
+            const tableName = th.dataset.table;
+            const sortKey = th.dataset.sort;
+            const state = tableSortState[tableName];
+            if (state && state.key === sortKey) {
+                th.dataset.sortDir = state.direction;
+            } else {
+                th.dataset.sortDir = '';
+            }
+        });
     }
 
     function getOverviewRows() {
@@ -419,16 +473,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
 
+        const sorted = sortRows(filtered, 'pendientes');
         const rc = document.getElementById('result-count');
-        if (rc) rc.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+        if (rc) rc.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
         tableBody.innerHTML = '';
-        if (filtered.length === 0) {
+        if (sorted.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
-        filtered.forEach(d => {
+        sorted.forEach(d => {
             const isFailed = isDisconnectedStatus(d.druo_status);
             const badge = statusBadge(d.druo_status, isFailed);
             const row = document.createElement('tr');
@@ -460,16 +515,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
 
+        const sorted = sortRows(filtered, 'comercial');
         const cc = document.getElementById('comercial-count');
-        if (cc) cc.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+        if (cc) cc.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
         comercialBody.innerHTML = '';
-        if (filtered.length === 0) {
+        if (sorted.length === 0) {
             comercialBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
-        filtered.forEach(d => {
+        sorted.forEach(d => {
             const isFailed = isDisconnectedStatus(d.druo_status);
             const badge = statusBadge(d.druo_status, isFailed);
             const row = document.createElement('tr');
@@ -505,16 +561,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
 
+        const sorted = sortRows(filtered, 'conectados');
         const cc = document.getElementById('conectados-count');
-        if (cc) cc.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+        if (cc) cc.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
         conectadosBody.innerHTML = '';
-        if (filtered.length === 0) {
+        if (sorted.length === 0) {
             conectadosBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
             return;
         }
 
-        filtered.forEach(d => {
+        sorted.forEach(d => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
@@ -545,12 +602,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function renderDescartados() {
         if (!descartadosBody) return;
+        const sorted = sortRows(descartados, 'descartados');
         descartadosBody.innerHTML = '';
-        if (descartados.length === 0) {
+        if (sorted.length === 0) {
             descartadosBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
             return;
         }
-        descartados.forEach(d => {
+        sorted.forEach(d => {
             const isFailed = isDisconnectedStatus(d.druo_status);
             const date = d.descartado_at
                 ? new Date(d.descartado_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -672,6 +730,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
+    document.querySelectorAll('th.th-sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const tableName = th.dataset.table;
+            const sortKey = th.dataset.sort;
+            if (!tableName || !sortKey || !tableSortState[tableName]) return;
+
+            const state = tableSortState[tableName];
+            if (state.key === sortKey) {
+                state.direction = state.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.key = sortKey;
+                state.direction = 'asc';
+            }
+
+            updateSortHeaders();
+
+            if (tableName === 'pendientes') renderTable();
+            if (tableName === 'comercial') renderComercial();
+            if (tableName === 'conectados') renderConectados();
+            if (tableName === 'descartados') renderDescartados();
+        });
+    });
     if (portfolioOverview) {
         portfolioOverview.addEventListener('mousemove', event => {
             const segment = event.target.closest('.stack-segment');
@@ -731,4 +811,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderComercial();
     renderDescartados();
     renderConectados();
+    updateSortHeaders();
 });

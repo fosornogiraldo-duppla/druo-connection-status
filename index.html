@@ -586,6 +586,33 @@
             text-align: left;
         }
 
+        thead th.th-sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 28px;
+        }
+
+        thead th.th-sortable::after {
+            content: '↕';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #cbd5e1;
+        }
+
+        thead th.th-sortable[data-sort-dir="asc"]::after {
+            content: '↑';
+            color: #475569;
+        }
+
+        thead th.th-sortable[data-sort-dir="desc"]::after {
+            content: '↓';
+            color: #475569;
+        }
+
         tbody td {
             padding: 13px 18px;
             border-bottom: 1px solid #f8fafc;
@@ -861,12 +888,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="min-width:150px;">Código Inmueble</th>
-                            <th>Oportunidad / Cliente</th>
-                            <th>Portafolio</th>
-                            <th>Fecha Entrega</th>
-                            <th>Status DRUO</th>
-                            <th style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="portafolio">Portafolio</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="fecha_entrega">Fecha Entrega</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="druo_status">Status DRUO</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="remarks" style="min-width:260px;">Remarks</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
@@ -900,12 +927,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="min-width:150px;">Código Inmueble</th>
-                            <th>Oportunidad / Cliente</th>
-                            <th>Portafolio</th>
-                            <th>Fecha Entrega</th>
-                            <th>Status DRUO</th>
-                            <th style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="portafolio">Portafolio</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="fecha_entrega">Fecha Entrega</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="druo_status">Status DRUO</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="remarks" style="min-width:260px;">Remarks</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
@@ -942,11 +969,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="min-width:150px;">Código Inmueble</th>
-                            <th>Oportunidad / Cliente</th>
-                            <th>Portafolio</th>
-                            <th>Fecha Entrega</th>
-                            <th>Status</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="portafolio">Portafolio</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="fecha_entrega">Fecha Entrega</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="druo_status">Status</th>
                         </tr>
                     </thead>
                     <tbody id="conectados-tbody">
@@ -964,13 +991,13 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="min-width:150px;">Código Inmueble</th>
-                            <th>Oportunidad / Cliente</th>
-                            <th>Portafolio</th>
-                            <th>Status DRUO</th>
-                            <th style="min-width:260px;">Remarks</th>
-                            <th>Razón de Descarte</th>
-                            <th>Fecha Descarte</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="portafolio">Portafolio</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="druo_status">Status DRUO</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="razon_descarte">Razón de Descarte</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="descartado_at">Fecha Descarte</th>
                             <th style="min-width:100px;"></th>
                         </tr>
                     </thead>
