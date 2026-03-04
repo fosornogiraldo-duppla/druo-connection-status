@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error } = await window.supabaseClient.from('druo_descartados').upsert([{
             codigo_inmueble: row.codigo_inmueble,
             nombre_oportunidad: row.nombre_oportunidad,
+            propietario_oportunidad: row.propietario_oportunidad,
             portafolio: row.portafolio,
             druo_status: row.druo_status,
             razon_descarte: razon,
@@ -453,6 +454,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div style="max-width:320px;font-size:12px;line-height:1.45;color:#475569;white-space:pre-wrap;word-break:break-word;">${text}</div>`;
     }
 
+    function ownerCell(owner) {
+        const text = (owner || '').toString().trim();
+        if (!text) return '<span style="color:#cbd5e1;">-</span>';
+        return `<div style="font-size:12px;line-height:1.45;color:#334155;white-space:normal;">${text}</div>`;
+    }
+
     // ----------------------------------------------------------------
     // Render: Pendientes table
     // ----------------------------------------------------------------
@@ -471,7 +478,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => selectedPortafolios.size === 0 || selectedPortafolios.has(d.portafolio))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'pendientes');
         const rc = document.getElementById('result-count');
@@ -479,7 +487,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (sorted.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -491,6 +499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
@@ -513,7 +522,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => isCommercialPortfolio(d.portafolio))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'comercial');
         const cc = document.getElementById('comercial-count');
@@ -521,7 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (sorted.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -533,6 +543,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
@@ -559,7 +570,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'conectados');
         const cc = document.getElementById('conectados-count');
@@ -567,7 +579,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         conectadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            conectadosBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
+            conectadosBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
             return;
         }
 
@@ -576,6 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#064e3b;background:#d1fae5;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">CONNECTED</span></td>
@@ -605,7 +618,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sorted = sortRows(descartados, 'descartados');
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            descartadosBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
+            descartadosBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
             return;
         }
         sorted.forEach(d => {
@@ -617,6 +630,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${statusBadge(d.druo_status, isFailed)}</td>
                 <td>${remarksCell(d.remarks)}</td>
@@ -649,6 +663,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="background:#f8fafc;padding:13px;border-radius:10px;border:1px solid #f1f5f9;">
                     <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Oportunidad</div>
                     <div style="font-size:13px;color:#334155;">${d.nombre_oportunidad || '-'}</div>
+                </div>
+                <div style="background:#f8fafc;padding:13px;border-radius:10px;border:1px solid #f1f5f9;">
+                    <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Propietario Opp</div>
+                    <div style="font-size:13px;color:#334155;">${d.propietario_oportunidad || '-'}</div>
                 </div>
                 <div style="background:#f8fafc;padding:13px;border-radius:10px;border:1px solid #f1f5f9;">
                     <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px;">Portafolio</div>
