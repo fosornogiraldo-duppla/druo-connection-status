@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function ownerCell(owner) {
         const text = (owner || '').toString().trim();
         if (!text) return '<span style="color:#cbd5e1;">-</span>';
-        return `<div style="font-size:12px;line-height:1.45;color:#334155;white-space:normal;">${text}</div>`;
+        return `<div style="font-size:13px;line-height:1.45;color:#334155;white-space:normal;">${text}</div>`;
     }
 
     // ----------------------------------------------------------------
