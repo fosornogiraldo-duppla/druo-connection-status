@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const populationFilter = document.getElementById('population-filter');
 
     const kpiFailed = document.getElementById('druo-kpi-failed');
-    const kpiNull = document.getElementById('druo-kpi-null');
+    const kpiNullOperativo = document.getElementById('druo-kpi-null-operativo');
+    const kpiNullCerrada = document.getElementById('druo-kpi-null-cerrada');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
     const kpiDescartados = document.getElementById('druo-kpi-descartados');
     const chartTooltip = document.createElement('div');
@@ -201,14 +202,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         return statusKey;
     }
 
+    function hasVisiblePortfolio(row) {
+        const port = (row.portafolio || '').toString().trim().toLowerCase();
+        return Boolean(port) && port !== 'sin portafolio';
+    }
+
     function updateKPIs() {
-        const baseRows = filterByPopulation(druoData);
+        const baseRows = filterByPopulation(druoData).filter(hasVisiblePortfolio);
         const all = baseRows.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const conectados = baseRows.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
+        const missing = pendientes.filter(d => isMissingInDruoStatus(d.druo_status));
+        const missingOperativos = missing.filter(d => (d.monitor_sources || []).includes('operativo')).length;
+        const missingCerrada = missing.filter(d => (d.monitor_sources || []).includes('cerrada_ganada')).length;
 
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
-        if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
+        if (kpiNullOperativo) kpiNullOperativo.textContent = missingOperativos;
+        if (kpiNullCerrada) kpiNullCerrada.textContent = missingCerrada;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
     }
