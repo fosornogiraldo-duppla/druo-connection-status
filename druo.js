@@ -32,18 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedStatuses = new Set(); // empty = all statuses
     let selectedPopulation = 'operativo';
     let pendingDiscardRow = null;
-    const CERRADA_GANADA_TABLE_CANDIDATES = [
-        'druo_opps_cerrada_ganada',
-        'druo_opp_cerrada_ganada',
-        'druo_cerrada_ganada',
-        'opps_cerrada_ganada',
-        'oportunidades_cerrada_ganada'
-    ];
-    const OPPS_TABLE_CANDIDATES = [
-        'opps',
-        'oportunidades',
-        'salesforce_oportunidades'
-    ];
     const tableSortState = {
         pendientes: { key: null, direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
@@ -76,8 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     // Supabase fetches
     // ----------------------------------------------------------------
-    function normalizeMonitorRow(row, source) {
+    function normalizeMonitorRow(row) {
         const normalized = { ...row };
+        const source = row.segmento === 'cerrada_ganada' ? 'cerrada_ganada' : 'operativo';
         normalized.codigo_inmueble =
             row.codigo_inmueble
             || row.id_oportunidad
@@ -123,42 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return normalized;
     }
 
-    function getStatusRank(status) {
-        if (isConnectedStatus(status)) return 3;
-        if (isDisconnectedStatus(status)) return 2;
-        if (normalizeDruoStatus(status)) return 1;
-        return 0;
-    }
-
-    function mergeMonitorData(operativosRows, cerradaGanadaRows) {
-        const byKey = new Map();
-        const upsert = row => {
-            const key = row.codigo_inmueble || [
-                row.nombre_oportunidad || 'sin-nombre',
-                row.propietario_oportunidad || 'sin-owner',
-                row.portafolio || 'sin-portafolio'
-            ].join('|');
-            const existing = byKey.get(key);
-            if (!existing) {
-                byKey.set(key, row);
-                return;
-            }
-
-            const mergedSources = new Set([...(existing.monitor_sources || []), ...(row.monitor_sources || [])]);
-            const keepIncoming = getStatusRank(row.druo_status) > getStatusRank(existing.druo_status);
-            const winner = keepIncoming ? row : existing;
-            byKey.set(key, {
-                ...winner,
-                monitor_sources: [...mergedSources],
-                monitor_segment: mergedSources.size > 1 ? 'ambos' : [...mergedSources][0]
-            });
-        };
-
-        operativosRows.forEach(upsert);
-        cerradaGanadaRows.forEach(upsert);
-        return [...byKey.values()];
-    }
-
     function matchesPopulation(row) {
         if (selectedPopulation === 'ambos') return true;
         return (row.monitor_sources || []).includes(selectedPopulation);
@@ -169,44 +122,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return rows.filter(matchesPopulation);
     }
 
-    async function fetchOperativosData() {
+    async function fetchDruoData() {
         const { data, error } = await window.supabaseClient.from('druo_no_conectados').select('*');
         if (error) { console.error('druo_no_conectados error:', error); return []; }
-        return (data || []).map(row => normalizeMonitorRow(row, 'operativo'));
-    }
-
-    async function fetchFromCandidates(candidates, queryBuilder) {
-        for (const tableName of candidates) {
-            const { data, error } = await queryBuilder(tableName);
-            if (error) continue;
-            console.info(`Fuente de cerrada ganada encontrada en ${tableName}`);
-            return data || [];
-        }
-        return [];
-    }
-
-    async function fetchCerradaGanadaData() {
-        const fromDedicatedTable = await fetchFromCandidates(
-            CERRADA_GANADA_TABLE_CANDIDATES,
-            tableName => window.supabaseClient.from(tableName).select('*')
-        );
-        if (fromDedicatedTable.length > 0) {
-            return fromDedicatedTable.map(row => normalizeMonitorRow(row, 'cerrada_ganada'));
-        }
-
-        const fromOppsTable = await fetchFromCandidates(
-            OPPS_TABLE_CANDIDATES,
-            tableName => window.supabaseClient
-                .from(tableName)
-                .select('*')
-                .eq('etapa_comercial', 'Cerrada ganada')
-        );
-        if (fromOppsTable.length > 0) {
-            return fromOppsTable.map(row => normalizeMonitorRow(row, 'cerrada_ganada'));
-        }
-
-        console.warn('No se encontró una tabla de oportunidades en cerrada ganada. Se mostrará solo operativos.');
-        return [];
+        return (data || []).map(normalizeMonitorRow);
     }
 
     async function fetchDescartados() {
@@ -992,13 +911,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Load all data in parallel
-    const [operativosData, cerradaGanadaData, descartadosResult, conectadosResult] = await Promise.all([
-        fetchOperativosData(),
-        fetchCerradaGanadaData(),
+    const [druoRows, descartadosResult, conectadosResult] = await Promise.all([
+        fetchDruoData(),
         fetchDescartados(),
         fetchConectados()
     ]);
-    druoData = mergeMonitorData(operativosData, cerradaGanadaData);
+    druoData = druoRows;
     descartados = descartadosResult;
     conectadosData = conectadosResult;
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
