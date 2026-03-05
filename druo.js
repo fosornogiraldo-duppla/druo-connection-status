@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.body.appendChild(chartTooltip);
 
     let druoData = [];
+    let escrituracionData = [];
     let descartados = [];
     let conectadosData = [];
     let descartadosCodes = new Set();
@@ -115,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return rows.filter(row => (row.monitor_sources || []).includes('operativo'));
     }
 
-    function getEscrituracionRows(rows = druoData) {
+    function getEscrituracionRows(rows = escrituracionData) {
         return rows.filter(row => (row.monitor_sources || []).includes('cerrada_ganada'));
     }
 
@@ -603,7 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!escrituracionBody) return;
         const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
 
-        const filtered = getEscrituracionRows(druoData)
+        const filtered = getEscrituracionRows(escrituracionData)
             .filter(d => !isConnectedStatus(d.druo_status))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
@@ -956,7 +957,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetchDescartados(),
         fetchConectados()
     ]);
-    druoData = [...operativosRows, ...escrituracionRows];
+    druoData = operativosRows;
+    escrituracionData = escrituracionRows;
     descartados = descartadosResult;
     conectadosData = conectadosResult;
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
