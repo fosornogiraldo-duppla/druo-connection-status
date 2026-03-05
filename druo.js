@@ -18,8 +18,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiFailed = document.getElementById('druo-kpi-failed');
     const kpiNull = document.getElementById('druo-kpi-null');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
-    const kpiPush = document.getElementById('druo-kpi-push');
     const kpiDescartados = document.getElementById('druo-kpi-descartados');
+    const kpiPushNull = document.getElementById('druo-kpi-push-null');
+    const kpiPushFailed = document.getElementById('druo-kpi-push-failed');
+    const kpiPushConectados = document.getElementById('druo-kpi-push-conectados');
+    const kpiPushDescartados = document.getElementById('druo-kpi-push-descartados');
     const chartTooltip = document.createElement('div');
     chartTooltip.className = 'chart-tooltip';
     document.body.appendChild(chartTooltip);
@@ -144,13 +147,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const all = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const conectados = druoData.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
-        const push = pendientes.filter(d => isCommercialPortfolio(d.portafolio)).length;
+        const pushAll = druoData.filter(d => isCommercialPortfolio(d.portafolio));
+        const pushDescartados = descartados.filter(d => isCommercialPortfolio(d.portafolio));
+        const pushActivos = pushAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const pushConectados = pushActivos.filter(d => isConnectedStatus(d.druo_status));
+        const pushPendientes = pushActivos.filter(d => !isConnectedStatus(d.druo_status));
 
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
         if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
-        if (kpiPush) kpiPush.textContent = push;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
+        if (kpiPushFailed) kpiPushFailed.textContent = pushPendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
+        if (kpiPushNull) kpiPushNull.textContent = pushPendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
+        if (kpiPushConectados) kpiPushConectados.textContent = pushConectados.length;
+        if (kpiPushDescartados) kpiPushDescartados.textContent = pushDescartados.length;
     }
 
     function isCommercialPortfolio(portafolio) {
