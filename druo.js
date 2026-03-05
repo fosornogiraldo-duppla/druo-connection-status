@@ -17,8 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const populationFilter = document.getElementById('population-filter');
 
     const kpiFailed = document.getElementById('druo-kpi-failed');
-    const kpiNullOperativo = document.getElementById('druo-kpi-null-operativo');
-    const kpiNullCerrada = document.getElementById('druo-kpi-null-cerrada');
+    const kpiNull = document.getElementById('druo-kpi-null');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
     const kpiDescartados = document.getElementById('druo-kpi-descartados');
     const chartTooltip = document.createElement('div');
@@ -114,12 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function matchesPopulation(row) {
-        if (selectedPopulation === 'ambos') return true;
         return (row.monitor_sources || []).includes(selectedPopulation);
     }
 
     function filterByPopulation(rows) {
-        if (selectedPopulation === 'ambos') return rows;
         return rows.filter(matchesPopulation);
     }
 
@@ -212,13 +209,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const all = baseRows.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const conectados = baseRows.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
-        const missing = pendientes.filter(d => isMissingInDruoStatus(d.druo_status));
-        const missingOperativos = missing.filter(d => (d.monitor_sources || []).includes('operativo')).length;
-        const missingCerrada = missing.filter(d => (d.monitor_sources || []).includes('cerrada_ganada')).length;
 
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
-        if (kpiNullOperativo) kpiNullOperativo.textContent = missingOperativos;
-        if (kpiNullCerrada) kpiNullCerrada.textContent = missingCerrada;
+        if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
     }
@@ -419,7 +412,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalActivos = rows.reduce((acc, row) => acc + row.total, 0);
 
         if (overviewTotalActivos) {
-            overviewTotalActivos.textContent = `Total monitoreados (Operativos + Cerrada ganada): ${totalActivos}`;
+            const viewLabel = selectedPopulation === 'cerrada_ganada' ? 'Cerrada ganada' : 'Operativos';
+            overviewTotalActivos.textContent = `Total monitoreados (${viewLabel}): ${totalActivos}`;
         }
 
         if (rows.length === 0) {
@@ -914,7 +908,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     const urlP = getURLParams();
     if (searchInput) searchInput.value = urlP.search;
-    selectedPopulation = ['operativo', 'cerrada_ganada', 'ambos'].includes(urlP.population) ? urlP.population : 'operativo';
+    selectedPopulation = ['operativo', 'cerrada_ganada'].includes(urlP.population) ? urlP.population : 'operativo';
     if (populationFilter) populationFilter.value = selectedPopulation;
     urlP.portafolios.forEach(p => selectedPortafolios.add(p));
     urlP.statuses.forEach(s => selectedStatuses.add(s));
