@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comercialSearch = document.getElementById('comercial-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
+    const populationFilter = document.getElementById('population-filter');
 
     const kpiFailed = document.getElementById('druo-kpi-failed');
     const kpiNull = document.getElementById('druo-kpi-null');
@@ -29,7 +30,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     let descartadosCodes = new Set();
     let selectedPortafolios = new Set();
     let selectedStatuses = new Set(); // empty = all statuses
+    let selectedPopulation = 'operativo';
     let pendingDiscardRow = null;
+    const CERRADA_GANADA_TABLE_CANDIDATES = [
+        'druo_opps_cerrada_ganada',
+        'druo_opp_cerrada_ganada',
+        'druo_cerrada_ganada',
+        'opps_cerrada_ganada',
+        'oportunidades_cerrada_ganada'
+    ];
+    const OPPS_TABLE_CANDIDATES = [
+        'opps',
+        'oportunidades',
+        'salesforce_oportunidades'
+    ];
     const tableSortState = {
         pendientes: { key: null, direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
@@ -45,13 +59,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return {
             statuses: p.get('statuses') ? p.get('statuses').split(',') : [],
             portafolios: p.get('portafolios') ? p.get('portafolios').split(',') : [],
-            search: p.get('search') || ''
+            search: p.get('search') || '',
+            population: p.get('population') || 'operativo'
         };
     }
     function saveURLParams() {
         const params = new URLSearchParams();
         if (selectedStatuses.size > 0) params.set('statuses', [...selectedStatuses].join(','));
         if (selectedPortafolios.size > 0) params.set('portafolios', [...selectedPortafolios].join(','));
+        if (selectedPopulation) params.set('population', selectedPopulation);
         const search = searchInput ? searchInput.value.trim() : '';
         if (search) params.set('search', search);
         window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`);
@@ -60,10 +76,137 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     // Supabase fetches
     // ----------------------------------------------------------------
-    async function fetchDruoData() {
+    function normalizeMonitorRow(row, source) {
+        const normalized = { ...row };
+        normalized.codigo_inmueble =
+            row.codigo_inmueble
+            || row.id_oportunidad
+            || row.opportunity_id
+            || row.id
+            || '';
+        normalized.nombre_oportunidad =
+            row.nombre_oportunidad
+            || row.oportunidad
+            || row.cuenta_cliente
+            || '';
+        normalized.propietario_oportunidad =
+            row.propietario_oportunidad
+            || row.owner_name
+            || row.propietario
+            || '';
+        normalized.tipo_cliente =
+            row.tipo_cliente
+            || row.tipo_de_cliente
+            || row.clase_cliente
+            || '';
+        normalized.portafolio =
+            row.portafolio
+            || row.nombre_campana
+            || '';
+        normalized.druo_status =
+            row.druo_status
+            || row.estado_druo
+            || row.estado_conexion_druo
+            || row.status_druo
+            || '';
+        normalized.fecha_entrega =
+            row.fecha_entrega
+            || row.fecha_cierre_oportunidad
+            || row.fecha_ultimo_cambio_stage
+            || null;
+        normalized.remarks =
+            row.remarks
+            || row.observaciones
+            || '';
+        normalized.monitor_sources = [source];
+        normalized.monitor_segment = source;
+        return normalized;
+    }
+
+    function getStatusRank(status) {
+        if (isConnectedStatus(status)) return 3;
+        if (isDisconnectedStatus(status)) return 2;
+        if (normalizeDruoStatus(status)) return 1;
+        return 0;
+    }
+
+    function mergeMonitorData(operativosRows, cerradaGanadaRows) {
+        const byKey = new Map();
+        const upsert = row => {
+            const key = row.codigo_inmueble || [
+                row.nombre_oportunidad || 'sin-nombre',
+                row.propietario_oportunidad || 'sin-owner',
+                row.portafolio || 'sin-portafolio'
+            ].join('|');
+            const existing = byKey.get(key);
+            if (!existing) {
+                byKey.set(key, row);
+                return;
+            }
+
+            const mergedSources = new Set([...(existing.monitor_sources || []), ...(row.monitor_sources || [])]);
+            const keepIncoming = getStatusRank(row.druo_status) > getStatusRank(existing.druo_status);
+            const winner = keepIncoming ? row : existing;
+            byKey.set(key, {
+                ...winner,
+                monitor_sources: [...mergedSources],
+                monitor_segment: mergedSources.size > 1 ? 'ambos' : [...mergedSources][0]
+            });
+        };
+
+        operativosRows.forEach(upsert);
+        cerradaGanadaRows.forEach(upsert);
+        return [...byKey.values()];
+    }
+
+    function matchesPopulation(row) {
+        if (selectedPopulation === 'ambos') return true;
+        return (row.monitor_sources || []).includes(selectedPopulation);
+    }
+
+    function filterByPopulation(rows) {
+        if (selectedPopulation === 'ambos') return rows;
+        return rows.filter(matchesPopulation);
+    }
+
+    async function fetchOperativosData() {
         const { data, error } = await window.supabaseClient.from('druo_no_conectados').select('*');
         if (error) { console.error('druo_no_conectados error:', error); return []; }
-        return data || [];
+        return (data || []).map(row => normalizeMonitorRow(row, 'operativo'));
+    }
+
+    async function fetchFromCandidates(candidates, queryBuilder) {
+        for (const tableName of candidates) {
+            const { data, error } = await queryBuilder(tableName);
+            if (error) continue;
+            console.info(`Fuente de cerrada ganada encontrada en ${tableName}`);
+            return data || [];
+        }
+        return [];
+    }
+
+    async function fetchCerradaGanadaData() {
+        const fromDedicatedTable = await fetchFromCandidates(
+            CERRADA_GANADA_TABLE_CANDIDATES,
+            tableName => window.supabaseClient.from(tableName).select('*')
+        );
+        if (fromDedicatedTable.length > 0) {
+            return fromDedicatedTable.map(row => normalizeMonitorRow(row, 'cerrada_ganada'));
+        }
+
+        const fromOppsTable = await fetchFromCandidates(
+            OPPS_TABLE_CANDIDATES,
+            tableName => window.supabaseClient
+                .from(tableName)
+                .select('*')
+                .eq('etapa_comercial', 'Cerrada ganada')
+        );
+        if (fromOppsTable.length > 0) {
+            return fromOppsTable.map(row => normalizeMonitorRow(row, 'cerrada_ganada'));
+        }
+
+        console.warn('No se encontró una tabla de oportunidades en cerrada ganada. Se mostrará solo operativos.');
+        return [];
     }
 
     async function fetchDescartados() {
@@ -140,8 +283,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateKPIs() {
-        const all = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const conectados = druoData.filter(d => isConnectedStatus(d.druo_status));
+        const baseRows = filterByPopulation(druoData);
+        const all = baseRows.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const conectados = baseRows.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
 
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
@@ -251,7 +395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         const byCode = new Map();
-        druoData.forEach(row => {
+        filterByPopulation(druoData).forEach(row => {
             const key = row.codigo_inmueble || [
                 row.portafolio || 'sin-portafolio',
                 row.nombre_oportunidad || 'sin-nombre',
@@ -328,7 +472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildOverviewSegment(label, className, value, total) {
         if (!value || !total) return '';
         const width = Math.max((value / total) * 100, 2.5);
-        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" data-tooltip="${label}: ${value} de ${total} operativos"></div>`;
+        return `<div class="stack-segment ${className}" style="width:${Math.min(width, 100)}%" data-tooltip="${label}: ${value} de ${total} monitoreados"></div>`;
     }
 
     function moveChartTooltip(event) {
@@ -346,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalActivos = rows.reduce((acc, row) => acc + row.total, 0);
 
         if (overviewTotalActivos) {
-            overviewTotalActivos.textContent = `Total inmuebles operativos: ${totalActivos}`;
+            overviewTotalActivos.textContent = `Total monitoreados (Operativos + Cerrada ganada): ${totalActivos}`;
         }
 
         if (rows.length === 0) {
@@ -356,9 +500,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         portfolioOverview.innerHTML = rows.map(row => `
             <div class="portfolio-row">
-                <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">
+                <div class="portfolio-name" title="${row.portafolio}: ${row.total} monitoreados">
                     <span>${row.portafolio}</span>
-                    <span class="portfolio-total-inline">${row.total} operativos</span>
+                    <span class="portfolio-total-inline">${row.total} monitoreados</span>
                 </div>
                 <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}">
                     ${buildOverviewSegment(`${row.portafolio} · No están en DRUO`, 'stack-null', row.sinIntentar, row.total)}
@@ -377,7 +521,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!statusChipsEl) return;
         // Only show non-CONNECTED statuses (CONNECTED has its own tab)
         const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(d.druo_status));
-        const statuses = [...new Set(activos.map(d => getStatusFilterKey(d.druo_status)))].sort();
+        const activosPorPoblacion = filterByPopulation(activos);
+        const statuses = [...new Set(activosPorPoblacion.map(d => getStatusFilterKey(d.druo_status)))].sort();
 
         statusChipsEl.innerHTML = '';
         statuses.forEach(s => {
@@ -411,7 +556,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildPortafolioChips() {
         if (!portafolioChipsEl) return;
         const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
+        const activosPorPoblacion = filterByPopulation(activos);
+        const ports = [...new Set(activosPorPoblacion.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
         portafolioChipsEl.innerHTML = '';
         ports.forEach(p => {
@@ -460,6 +606,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div style="font-size:13px;line-height:1.45;color:#334155;white-space:normal;">${text}</div>`;
     }
 
+    function tipoClienteCell(tipoCliente) {
+        const text = (tipoCliente || '').toString().trim();
+        if (!text) {
+            return '<span style="font-size:11px;color:#94a3b8;background:#f8fafc;padding:2px 8px;border-radius:999px;border:1px solid #e2e8f0;">Sin dato</span>';
+        }
+        return `<span style="font-size:11px;color:#334155;background:#f1f5f9;padding:2px 8px;border-radius:999px;border:1px solid #cbd5e1;">${text}</span>`;
+    }
+
     // ----------------------------------------------------------------
     // Render: Pendientes table
     // ----------------------------------------------------------------
@@ -468,6 +622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         const filtered = druoData
+            .filter(matchesPopulation)
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status)) // CONNECTED goes to its own tab
             .filter(d => {
@@ -479,7 +634,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.tipo_cliente || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'pendientes');
         const rc = document.getElementById('result-count');
@@ -487,7 +643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (sorted.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -500,6 +656,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td>${tipoClienteCell(d.tipo_cliente)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
@@ -517,13 +674,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
 
         const filtered = druoData
+            .filter(matchesPopulation)
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status))
             .filter(d => isCommercialPortfolio(d.portafolio))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.tipo_cliente || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'comercial');
         const cc = document.getElementById('comercial-count');
@@ -531,7 +690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (sorted.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -544,6 +703,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td>${tipoClienteCell(d.tipo_cliente)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td>${badge}</td>
@@ -566,12 +726,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Derive conectados directly from druoData
         const filtered = druoData
+            .filter(matchesPopulation)
             .filter(d => isConnectedStatus(d.druo_status))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.tipo_cliente || '').toLowerCase().includes(searchTxt));
 
         const sorted = sortRows(filtered, 'conectados');
         const cc = document.getElementById('conectados-count');
@@ -579,7 +741,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         conectadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            conectadosBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
+            conectadosBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
             return;
         }
 
@@ -589,6 +751,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td>${tipoClienteCell(d.tipo_cliente)}</td>
                 <td><span style="font-size:11px;color:#064e3b;background:#d1fae5;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">CONNECTED</span></td>
@@ -600,7 +763,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildConectadosPortFilter() {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
-            druoData.filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
+            filterByPopulation(druoData).filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
         )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
@@ -748,6 +911,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
+    if (populationFilter) {
+        populationFilter.addEventListener('change', () => {
+            selectedPopulation = populationFilter.value || 'operativo';
+            saveURLParams();
+            updateKPIs();
+            renderPortfolioOverview();
+            buildStatusChips();
+            buildPortafolioChips();
+            buildConectadosPortFilter();
+            renderTable();
+            renderComercial();
+            renderConectados();
+        });
+    }
     document.querySelectorAll('th.th-sortable').forEach(th => {
         th.addEventListener('click', () => {
             const tableName = th.dataset.table;
@@ -808,16 +985,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     const urlP = getURLParams();
     if (searchInput) searchInput.value = urlP.search;
+    selectedPopulation = ['operativo', 'cerrada_ganada', 'ambos'].includes(urlP.population) ? urlP.population : 'operativo';
+    if (populationFilter) populationFilter.value = selectedPopulation;
     urlP.portafolios.forEach(p => selectedPortafolios.add(p));
     urlP.statuses.forEach(s => selectedStatuses.add(s));
 
 
     // Load all data in parallel
-    [druoData, descartados, conectadosData] = await Promise.all([
-        fetchDruoData(),
+    const [operativosData, cerradaGanadaData, descartadosResult, conectadosResult] = await Promise.all([
+        fetchOperativosData(),
+        fetchCerradaGanadaData(),
         fetchDescartados(),
         fetchConectados()
     ]);
+    druoData = mergeMonitorData(operativosData, cerradaGanadaData);
+    descartados = descartadosResult;
+    conectadosData = conectadosResult;
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
 
     updateKPIs();

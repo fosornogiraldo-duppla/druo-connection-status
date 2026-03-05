@@ -1071,7 +1071,7 @@
             <div class="overview-header" onclick="toggleOverview()">
                 <div>
                     <h2 class="overview-title">Estado por portafolio</h2>
-                    <p class="overview-subtitle">Distribución apilada de inmuebles operativos por estado DRUO.</p>
+                    <p class="overview-subtitle">Distribución apilada de clientes monitoreados por estado DRUO.</p>
                 </div>
                 <span class="overview-chevron" id="overview-chevron">▼</span>
             </div>
@@ -1082,7 +1082,7 @@
                     <span class="legend-item"><span class="legend-dot stack-connected"></span>Conectados</span>
                     <span class="legend-item"><span class="legend-dot stack-discarded"></span>Descartados</span>
                 </div>
-                <div class="overview-total" id="overview-total-activos">Total inmuebles operativos: —</div>
+                <div class="overview-total" id="overview-total-activos">Total monitoreados: —</div>
                 <div id="portfolio-overview" class="portfolio-chart">
                     <div class="overview-empty">Cargando resumen por portafolio...</div>
                 </div>
@@ -1096,6 +1096,18 @@
             <button class="view-tab" id="tab-comercial" onclick="switchView('comercial')">📣 Push port. 6+</button>
             <button class="view-tab" id="tab-conectados" onclick="switchView('conectados')">✅ Conectados</button>
             <button class="view-tab" id="tab-descartados" onclick="switchView('descartados')">🗂 Descartados</button>
+        </div>
+        <div class="filter-card" style="margin-top:14px; margin-bottom:14px;">
+            <div class="filter-row" style="margin-bottom:0;">
+                <div class="filter-col">
+                    <div class="section-label">Población monitoreada</div>
+                    <select id="population-filter" class="filter-select">
+                        <option value="operativo">Solo Operativos</option>
+                        <option value="cerrada_ganada">Solo Cerrada ganada</option>
+                        <option value="ambos">Operativos + Cerrada ganada</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- ====== VIEW: PENDIENTES ====== -->
@@ -1144,6 +1156,7 @@
                             <th class="th-sortable" data-table="pendientes" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="propietario_oportunidad" style="min-width:180px;">Propietario Opp</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="tipo_cliente">Tipo cliente</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="druo_status">Status DRUO</th>
@@ -1153,7 +1166,7 @@
                     </thead>
                     <tbody id="druo-tbody">
                         <tr>
-                            <td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1184,6 +1197,7 @@
                             <th class="th-sortable" data-table="comercial" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
                             <th class="th-sortable" data-table="comercial" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
                             <th class="th-sortable" data-table="comercial" data-sort="propietario_oportunidad" style="min-width:180px;">Propietario Opp</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="tipo_cliente">Tipo cliente</th>
                             <th class="th-sortable" data-table="comercial" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="comercial" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="comercial" data-sort="druo_status">Status DRUO</th>
@@ -1193,7 +1207,7 @@
                     </thead>
                     <tbody id="comercial-tbody">
                         <tr>
-                            <td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1227,6 +1241,7 @@
                             <th class="th-sortable" data-table="conectados" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
                             <th class="th-sortable" data-table="conectados" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
                             <th class="th-sortable" data-table="conectados" data-sort="propietario_oportunidad" style="min-width:180px;">Propietario Opp</th>
+                            <th class="th-sortable" data-table="conectados" data-sort="tipo_cliente">Tipo cliente</th>
                             <th class="th-sortable" data-table="conectados" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="conectados" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="conectados" data-sort="druo_status">Status</th>
@@ -1234,7 +1249,7 @@
                     </thead>
                     <tbody id="conectados-tbody">
                         <tr>
-                            <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
