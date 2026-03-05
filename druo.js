@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiFailed = document.getElementById('druo-kpi-failed');
     const kpiNull = document.getElementById('druo-kpi-null');
     const kpiConectados = document.getElementById('druo-kpi-conectados');
+    const kpiPush = document.getElementById('druo-kpi-push');
     const kpiDescartados = document.getElementById('druo-kpi-descartados');
     const chartTooltip = document.createElement('div');
     chartTooltip.className = 'chart-tooltip';
@@ -143,10 +144,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const all = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const conectados = druoData.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
+        const push = pendientes.filter(d => isCommercialPortfolio(d.portafolio)).length;
 
         if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
         if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
+        if (kpiPush) kpiPush.textContent = push;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
     }
 

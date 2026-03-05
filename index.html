@@ -940,7 +940,7 @@
         <!-- HERO -->
         <header class="hero">
             <div>
-                <h1>🔌 Clientes conectados a DRUO</h1>
+                <h1>Clientes conectados a DRUO</h1>
                 <p>Seguimiento del estado de conexión y gestión de clientes pendientes por portafolio.</p>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
@@ -956,22 +956,16 @@
                     <div class="num" id="druo-kpi-conectados" style="color:#86efac;">—</div>
                     <div class="lbl">Conectados</div>
                 </div>
+                <div class="kpi-pill" style="background:rgba(96,165,250,0.2);">
+                    <div class="num" id="druo-kpi-push" style="color:#bfdbfe;">—</div>
+                    <div class="lbl">Push 6+ / Progresión</div>
+                </div>
                 <div class="kpi-pill" style="background:rgba(148,163,184,0.2);">
                     <div class="num" id="druo-kpi-descartados" style="color:#cbd5e1;">—</div>
                     <div class="lbl">Descartados</div>
                 </div>
             </div>
         </header>
-
-        <section class="report-banner">
-            <div>
-                <h2 class="report-banner-title">Push conexión: clientes nuevos</h2>
-                <p class="report-banner-desc">Clientes nuevos que se saltaron la regla de validación. Usa este acceso directo para revisar el reporte y empujar su conexión desde Salesforce.</p>
-            </div>
-            <a class="report-banner-link" href="https://duppla.lightning.force.com/lightning/r/Report/00ORb000004dng5MAA/view" target="_blank" rel="noopener noreferrer">
-                Abrir reporte en Salesforce
-            </a>
-        </section>
 
         <!-- HOW TO BANNER -->
         <div class="howto-banner">
@@ -1198,6 +1192,15 @@
                     </tbody>
                 </table>
             </div>
+            <section class="report-banner" style="margin-top:16px;">
+                <div>
+                    <h2 class="report-banner-title">Push conexión: clientes nuevos</h2>
+                    <p class="report-banner-desc">Clientes nuevos que se saltaron la regla de validación. Usa este acceso directo para revisar el reporte y empujar su conexión desde Salesforce.</p>
+                </div>
+                <a class="report-banner-link" href="https://duppla.lightning.force.com/lightning/r/Report/00ORb000004dng5MAA/view" target="_blank" rel="noopener noreferrer">
+                    Abrir reporte en Salesforce
+                </a>
+            </section>
         </div>
 
         <!-- ====== VIEW: CONECTADOS ====== -->
