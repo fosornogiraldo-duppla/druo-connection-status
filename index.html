@@ -1093,20 +1093,10 @@
         <div class="view-tabs">
             <button class="view-tab active" id="tab-pendientes" onclick="switchView('pendientes')">📋
                 Pendientes</button>
+            <button class="view-tab" id="tab-escrituracion" onclick="switchView('escrituracion')">🏗 Escrituración</button>
             <button class="view-tab" id="tab-comercial" onclick="switchView('comercial')">📣 Push port. 6+</button>
             <button class="view-tab" id="tab-conectados" onclick="switchView('conectados')">✅ Conectados</button>
             <button class="view-tab" id="tab-descartados" onclick="switchView('descartados')">🗂 Descartados</button>
-        </div>
-        <div class="filter-card" style="margin-top:14px; margin-bottom:14px;">
-            <div class="filter-row" style="margin-bottom:0;">
-                <div class="filter-col">
-                    <div class="section-label">Vista</div>
-                    <select id="population-filter" class="filter-select">
-                        <option value="operativo">Solo Operativos</option>
-                        <option value="cerrada_ganada">Solo Cerrada ganada</option>
-                    </select>
-                </div>
-            </div>
         </div>
 
         <!-- ====== VIEW: PENDIENTES ====== -->
@@ -1166,6 +1156,46 @@
                     <tbody id="druo-tbody">
                         <tr>
                             <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====== VIEW: ESCRITURACION ====== -->
+        <div id="view-escrituracion" class="hidden">
+            <div class="filter-card">
+                <div class="filter-row" style="margin-bottom:0;">
+                    <div class="filter-col" style="flex:1; min-width:220px;">
+                        <div class="section-label">Buscar</div>
+                        <input id="escrituracion-search-input" type="text" class="search-input"
+                            placeholder="🔍  Nombre o código...">
+                    </div>
+                    <div style="margin-left:auto; padding-top:24px;">
+                        <span id="escrituracion-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
+                    </div>
+                </div>
+                <div style="font-size:12px;color:#64748b;margin-top:12px;">
+                    Vista exclusiva para oportunidades en <strong>escrituración / cerrada ganada</strong>.
+                </div>
+            </div>
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="propietario_oportunidad" style="min-width:180px;">Propietario Opp</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="tipo_cliente">Tipo cliente</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="portafolio">Portafolio</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="fecha_entrega">Fecha Entrega</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="druo_status">Status DRUO</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="escrituracion-tbody">
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1341,7 +1371,7 @@
 
         // ---- View switching ----
         function switchView(view) {
-            ['pendientes', 'comercial', 'conectados', 'descartados'].forEach(v => {
+            ['pendientes', 'escrituracion', 'comercial', 'conectados', 'descartados'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
                 document.getElementById(`tab-${v}`).classList.toggle('active', v === view);
             });

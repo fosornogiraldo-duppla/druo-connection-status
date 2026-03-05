@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comercialBody = document.getElementById('comercial-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
+    const escrituracionBody = document.getElementById('escrituracion-tbody');
     const portfolioOverview = document.getElementById('portfolio-overview');
     const overviewTotalActivos = document.getElementById('overview-total-activos');
     const statusChipsEl = document.getElementById('status-chips');
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comercialSearch = document.getElementById('comercial-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
-    const populationFilter = document.getElementById('population-filter');
+    const escrituracionSearch = document.getElementById('escrituracion-search-input');
 
     const kpiFailed = document.getElementById('druo-kpi-failed');
     const kpiNull = document.getElementById('druo-kpi-null');
@@ -30,10 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let descartadosCodes = new Set();
     let selectedPortafolios = new Set();
     let selectedStatuses = new Set(); // empty = all statuses
-    let selectedPopulation = 'operativo';
     let pendingDiscardRow = null;
     const tableSortState = {
         pendientes: { key: null, direction: 'asc' },
+        escrituracion: { key: null, direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
         conectados: { key: null, direction: 'asc' },
         descartados: { key: null, direction: 'asc' }
@@ -47,15 +48,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return {
             statuses: p.get('statuses') ? p.get('statuses').split(',') : [],
             portafolios: p.get('portafolios') ? p.get('portafolios').split(',') : [],
-            search: p.get('search') || '',
-            population: p.get('population') || 'operativo'
+            search: p.get('search') || ''
         };
     }
     function saveURLParams() {
         const params = new URLSearchParams();
         if (selectedStatuses.size > 0) params.set('statuses', [...selectedStatuses].join(','));
         if (selectedPortafolios.size > 0) params.set('portafolios', [...selectedPortafolios].join(','));
-        if (selectedPopulation) params.set('population', selectedPopulation);
         const search = searchInput ? searchInput.value.trim() : '';
         if (search) params.set('search', search);
         window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`);
@@ -112,18 +111,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         return normalized;
     }
 
-    function matchesPopulation(row) {
-        return (row.monitor_sources || []).includes(selectedPopulation);
+    function getOperativosRows(rows = druoData) {
+        return rows.filter(row => (row.monitor_sources || []).includes('operativo'));
     }
 
-    function filterByPopulation(rows) {
-        return rows.filter(matchesPopulation);
+    function getEscrituracionRows(rows = druoData) {
+        return rows.filter(row => (row.monitor_sources || []).includes('cerrada_ganada'));
     }
 
-    async function fetchDruoData() {
+    async function fetchOperativosData() {
         const { data, error } = await window.supabaseClient.from('druo_no_conectados').select('*');
         if (error) { console.error('druo_no_conectados error:', error); return []; }
-        return (data || []).map(normalizeMonitorRow);
+        return (data || []).map(row => normalizeMonitorRow({ ...row, segmento: 'operativo' }));
+    }
+
+    async function fetchEscrituracionData() {
+        const { data, error } = await window.supabaseClient.from('druo_escrituracion').select('*');
+        if (error) {
+            console.warn('druo_escrituracion table not found or error:', error.message);
+            return [];
+        }
+        return (data || []).map(row => normalizeMonitorRow({ ...row, segmento: 'cerrada_ganada' }));
     }
 
     async function fetchDescartados() {
@@ -205,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateKPIs() {
-        const baseRows = filterByPopulation(druoData).filter(hasVisiblePortfolio);
+        const baseRows = getOperativosRows(druoData).filter(hasVisiblePortfolio);
         const all = baseRows.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const conectados = baseRows.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
@@ -317,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         const byCode = new Map();
-        filterByPopulation(druoData).forEach(row => {
+        getOperativosRows(druoData).forEach(row => {
             const key = row.codigo_inmueble || [
                 row.portafolio || 'sin-portafolio',
                 row.nombre_oportunidad || 'sin-nombre',
@@ -412,8 +420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalActivos = rows.reduce((acc, row) => acc + row.total, 0);
 
         if (overviewTotalActivos) {
-            const viewLabel = selectedPopulation === 'cerrada_ganada' ? 'Cerrada ganada' : 'Operativos';
-            overviewTotalActivos.textContent = `Total monitoreados (${viewLabel}): ${totalActivos}`;
+            overviewTotalActivos.textContent = `Total monitoreados (Operativos): ${totalActivos}`;
         }
 
         if (rows.length === 0) {
@@ -444,7 +451,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!statusChipsEl) return;
         // Only show non-CONNECTED statuses (CONNECTED has its own tab)
         const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(d.druo_status));
-        const activosPorPoblacion = filterByPopulation(activos);
+        const activosPorPoblacion = getOperativosRows(activos);
         const statuses = [...new Set(activosPorPoblacion.map(d => getStatusFilterKey(d.druo_status)))].sort();
 
         statusChipsEl.innerHTML = '';
@@ -479,7 +486,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildPortafolioChips() {
         if (!portafolioChipsEl) return;
         const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const activosPorPoblacion = filterByPopulation(activos);
+        const activosPorPoblacion = getOperativosRows(activos);
         const ports = [...new Set(activosPorPoblacion.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
         portafolioChipsEl.innerHTML = '';
@@ -545,7 +552,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         const filtered = druoData
-            .filter(matchesPopulation)
+            .filter(d => (d.monitor_sources || []).includes('operativo'))
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status)) // CONNECTED goes to its own tab
             .filter(d => {
@@ -592,12 +599,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function renderEscrituracion() {
+        if (!escrituracionBody) return;
+        const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
+
+        const filtered = getEscrituracionRows(druoData)
+            .filter(d => !isConnectedStatus(d.druo_status))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.tipo_cliente || '').toLowerCase().includes(searchTxt));
+
+        const sorted = sortRows(filtered, 'escrituracion');
+        const ec = document.getElementById('escrituracion-count');
+        if (ec) ec.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
+
+        escrituracionBody.innerHTML = '';
+        if (sorted.length === 0) {
+            escrituracionBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay oportunidades de escrituración pendientes con los filtros actuales.</td></tr>';
+            return;
+        }
+
+        sorted.forEach(d => {
+            const isFailed = isDisconnectedStatus(d.druo_status);
+            const badge = statusBadge(d.druo_status, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td>${tipoClienteCell(d.tipo_cliente)}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
+                <td>${badge}</td>
+                <td>${remarksCell(d.remarks)}</td>
+            `;
+            row.addEventListener('click', () => showDetailModal(d, badge));
+            escrituracionBody.appendChild(row);
+        });
+    }
+
     function renderComercial() {
         if (!comercialBody) return;
         const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
 
         const filtered = druoData
-            .filter(matchesPopulation)
+            .filter(d => (d.monitor_sources || []).includes('operativo'))
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status))
             .filter(d => isCommercialPortfolio(d.portafolio))
@@ -649,7 +698,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Derive conectados directly from druoData
         const filtered = druoData
-            .filter(matchesPopulation)
+            .filter(d => (d.monitor_sources || []).includes('operativo'))
             .filter(d => isConnectedStatus(d.druo_status))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
@@ -686,7 +735,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildConectadosPortFilter() {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
-            filterByPopulation(druoData).filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
+            getOperativosRows(druoData).filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
         )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
@@ -810,7 +859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingDiscardRow = null;
         closeModal('discard-modal');
         btn.disabled = false; btn.textContent = 'Descartar';
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEscrituracion(); renderDescartados(); buildPortafolioChips();
     });
 
     // ----------------------------------------------------------------
@@ -821,7 +870,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { alert('Error al restaurar.'); return; }
         descartados = descartados.filter(d => d.codigo_inmueble !== codigo_inmueble);
         descartadosCodes.delete(codigo_inmueble);
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEscrituracion(); renderDescartados(); buildPortafolioChips();
     }
 
     // Helper exposed globally
@@ -831,23 +880,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Event listeners
     // ----------------------------------------------------------------
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
+    if (escrituracionSearch) escrituracionSearch.addEventListener('input', renderEscrituracion);
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
-    if (populationFilter) {
-        populationFilter.addEventListener('change', () => {
-            selectedPopulation = populationFilter.value || 'operativo';
-            saveURLParams();
-            updateKPIs();
-            renderPortfolioOverview();
-            buildStatusChips();
-            buildPortafolioChips();
-            buildConectadosPortFilter();
-            renderTable();
-            renderComercial();
-            renderConectados();
-        });
-    }
     document.querySelectorAll('th.th-sortable').forEach(th => {
         th.addEventListener('click', () => {
             const tableName = th.dataset.table;
@@ -865,6 +901,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateSortHeaders();
 
             if (tableName === 'pendientes') renderTable();
+            if (tableName === 'escrituracion') renderEscrituracion();
             if (tableName === 'comercial') renderComercial();
             if (tableName === 'conectados') renderConectados();
             if (tableName === 'descartados') renderDescartados();
@@ -908,19 +945,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     const urlP = getURLParams();
     if (searchInput) searchInput.value = urlP.search;
-    selectedPopulation = ['operativo', 'cerrada_ganada'].includes(urlP.population) ? urlP.population : 'operativo';
-    if (populationFilter) populationFilter.value = selectedPopulation;
     urlP.portafolios.forEach(p => selectedPortafolios.add(p));
     urlP.statuses.forEach(s => selectedStatuses.add(s));
 
 
     // Load all data in parallel
-    const [druoRows, descartadosResult, conectadosResult] = await Promise.all([
-        fetchDruoData(),
+    const [operativosRows, escrituracionRows, descartadosResult, conectadosResult] = await Promise.all([
+        fetchOperativosData(),
+        fetchEscrituracionData(),
         fetchDescartados(),
         fetchConectados()
     ]);
-    druoData = druoRows;
+    druoData = [...operativosRows, ...escrituracionRows];
     descartados = descartadosResult;
     conectadosData = conectadosResult;
     descartadosCodes = new Set(descartados.map(d => d.codigo_inmueble));
@@ -931,6 +967,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildPortafolioChips();
     buildConectadosPortFilter();
     renderTable();
+    renderEscrituracion();
     renderComercial();
     renderDescartados();
     renderConectados();
