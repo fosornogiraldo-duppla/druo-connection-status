@@ -658,12 +658,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.style.cursor = 'pointer';
             row.innerHTML = `
                 <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
-                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
-                <td>${badge}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
@@ -704,12 +704,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.style.cursor = 'pointer';
             row.innerHTML = `
                 <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
-                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
-                <td>${badge}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
@@ -751,12 +751,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.style.cursor = 'pointer';
             row.innerHTML = `
                 <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
-                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
-                <td>${badge}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
