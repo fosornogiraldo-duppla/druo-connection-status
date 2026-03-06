@@ -295,6 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getRowSortValue(row, key) {
+        if (key === 'segmento') return getNormalizedLifecycle(row);
         if (key === 'portafolio') return row.portafolio || 'Sin portafolio';
         if (key === 'druo_status') return displayStatusLabel(getRowStatus(row));
         if (key === 'fecha_entrega' || key === 'descartado_at') {
@@ -582,6 +583,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${bg};color:${color};border:1px solid ${border};">${displayStatusLabel(status)}</span>`;
     }
 
+    function lifecycleBadge(row) {
+        const lifecycle = getNormalizedLifecycle(row);
+        if (lifecycle === 'operativo') {
+            return '<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Operativo</span>';
+        }
+        if (lifecycle === 'escrituracion') {
+            return '<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#ffedd5;color:#9a3412;border:1px solid #fdba74;">Escrituración</span>';
+        }
+        return '<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Sin definir</span>';
+    }
+
     function remarksCell(remarks) {
         const text = (remarks || '').toString().trim();
         if (!text) return '<span style="color:#cbd5e1;">-</span>';
@@ -621,7 +633,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (sorted.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -632,6 +644,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
             row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
@@ -666,7 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (sorted.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -677,6 +690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
             row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
@@ -712,7 +726,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         escrituracionBody.innerHTML = '';
         if (sorted.length === 0) {
-            escrituracionBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
+            escrituracionBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
             return;
         }
 
@@ -723,6 +737,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
             row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
@@ -761,13 +776,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         conectadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            conectadosBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
+            conectadosBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes conectados aún.</td></tr>';
             return;
         }
 
         sorted.forEach(d => {
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
@@ -800,7 +816,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sorted = sortRows(descartados, 'descartados');
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            descartadosBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
+            descartadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
             return;
         }
         sorted.forEach(d => {
@@ -811,6 +827,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 : '-';
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
