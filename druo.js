@@ -297,7 +297,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getRowSortValue(row, key) {
         if (key === 'portafolio') return row.portafolio || 'Sin portafolio';
         if (key === 'druo_status') return displayStatusLabel(getRowStatus(row));
-        if (key === 'fecha_entrega' || key === 'descartado_at') return row[key] ? new Date(row[key]).getTime() : Number.NEGATIVE_INFINITY;
+        if (key === 'fecha_entrega' || key === 'descartado_at') {
+            if (!row[key]) return null;
+            const ts = new Date(row[key]).getTime();
+            return Number.isNaN(ts) ? null : ts;
+        }
         return row[key] ?? '';
     }
 
@@ -317,6 +321,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     function sortRows(rows, tableName) {
         const state = tableSortState[tableName];
         if (!state || !state.key) return rows;
+
+        if (state.key === 'fecha_entrega' || state.key === 'descartado_at') {
+            return [...rows].sort((a, b) => {
+                const aValue = getRowSortValue(a, state.key);
+                const bValue = getRowSortValue(b, state.key);
+                const aMissing = aValue === null;
+                const bMissing = bValue === null;
+
+                // Keep missing dates always at the end.
+                if (aMissing && bMissing) return 0;
+                if (aMissing) return 1;
+                if (bMissing) return -1;
+
+                return state.direction === 'desc' ? (bValue - aValue) : (aValue - bValue);
+            });
+        }
 
         const direction = state.direction === 'desc' ? -1 : 1;
         return [...rows].sort((a, b) => direction * compareRowsByKey(a, b, state.key));
