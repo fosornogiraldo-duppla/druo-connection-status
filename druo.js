@@ -9,8 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conectadosBody = document.getElementById('conectados-tbody');
     const portfolioOverview = document.getElementById('portfolio-overview');
     const overviewTotalActivos = document.getElementById('overview-total-activos');
-    const statusChipsEl = document.getElementById('status-chips');
-    const portafolioChipsEl = document.getElementById('portafolio-chips');
+    const statusOptionsEl = document.getElementById('status-options');
+    const portafolioOptionsEl = document.getElementById('portafolio-options');
+    const statusTriggerText = document.getElementById('status-trigger-text');
+    const portafolioTriggerText = document.getElementById('portafolio-trigger-text');
     const searchInput = document.getElementById('druo-search-input');
     const comercialSearch = document.getElementById('comercial-search-input');
     const escrituracionSearch = document.getElementById('escrituracion-search-input');
@@ -192,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function displayStatusLabel(status) {
         if (isConnectedStatus(status)) return 'Conectado';
-        if (isMissingInDruoStatus(status)) return 'No están en DRUO';
+        if (isMissingInDruoStatus(status)) return 'No está en DRUO';
         if (isDisconnectedStatus(status)) return 'Desconectado';
         return 'Desconectado';
     }
@@ -203,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getStatusFilterLabel(statusKey) {
-        if (statusKey === 'missing') return 'No están en DRUO';
+        if (statusKey === 'missing') return 'No está en DRUO';
         if (statusKey === 'disconnected') return 'Desconectado';
         return statusKey;
     }
@@ -495,7 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span class="portfolio-total-inline">${row.total} operativos</span>
                 </div>
                 <div class="stack-track" aria-label="Distribucion de estados para ${row.portafolio}">
-                    ${buildOverviewSegment(`${row.portafolio} · No están en DRUO`, 'stack-null', row.sinIntentar, row.total)}
+                    ${buildOverviewSegment(`${row.portafolio} · No está en DRUO`, 'stack-null', row.sinIntentar, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Desconectados`, 'stack-failed', row.failed, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Conectados`, 'stack-connected', row.connected, row.total)}
                     ${buildOverviewSegment(`${row.portafolio} · Descartados`, 'stack-discarded', row.discarded, row.total)}
@@ -505,29 +507,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // Status chips (multi-select)
+    // Status dropdown (multi-select)
     // ----------------------------------------------------------------
     function buildStatusChips() {
-        if (!statusChipsEl) return;
-        // Only show non-CONNECTED statuses (CONNECTED has its own tab)
+        if (!statusOptionsEl) return;
         const ativosBase = getRowsForSelectedSegment();
         const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(getRowStatus(d)));
         const statuses = [...new Set(activos.map(d => getStatusFilterKey(getRowStatus(d))))].sort();
 
-        statusChipsEl.innerHTML = '';
+        statusOptionsEl.innerHTML = '';
+        if (statuses.length === 0) {
+            statusOptionsEl.innerHTML = '<span style="color:#94a3b8; font-size:12px; padding:8px; display:block;">Sin opciones</span>';
+        }
         statuses.forEach(s => {
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.textContent = getStatusFilterLabel(s);
-            chip.className = 'portafolio-chip';
-            chip.dataset.status = s;
-            if (selectedStatuses.has(s)) chip.classList.add('active');
-            chip.addEventListener('click', () => {
-                selectedStatuses.has(s) ? selectedStatuses.delete(s) : selectedStatuses.add(s);
-                chip.classList.toggle('active');
+            const label = document.createElement('label');
+            label.className = 'multi-option';
+            const checked = selectedStatuses.has(s) ? 'checked' : '';
+            label.innerHTML = `<input type="checkbox" data-status="${s}" ${checked} /> <span>${getStatusFilterLabel(s)}</span>`;
+            const input = label.querySelector('input');
+            input.addEventListener('change', () => {
+                input.checked ? selectedStatuses.add(s) : selectedStatuses.delete(s);
                 saveURLParams(); renderTable(); updateStatusCount();
             });
-            statusChipsEl.appendChild(chip);
+            statusOptionsEl.appendChild(label);
         });
         updateStatusCount();
     }
@@ -538,29 +540,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         el.textContent = selectedStatuses.size === 0 ? 'Todos' : `${selectedStatuses.size} seleccionados`;
         el.style.background = selectedStatuses.size === 0 ? '#e2e8f0' : 'var(--color-brand-dark)';
         el.style.color = selectedStatuses.size === 0 ? '#475569' : 'white';
+        if (statusTriggerText) statusTriggerText.textContent = selectedStatuses.size === 0 ? 'Todos los status' : `${selectedStatuses.size} status seleccionados`;
     }
 
     // ----------------------------------------------------------------
-    // Portafolio chips (for pending view)
+    // Portafolio dropdown (for pending view)
     // ----------------------------------------------------------------
     function buildPortafolioChips() {
-        if (!portafolioChipsEl) return;
+        if (!portafolioOptionsEl) return;
         const activos = getRowsForSelectedSegment().filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
-        portafolioChipsEl.innerHTML = '';
+        portafolioOptionsEl.innerHTML = '';
+        if (ports.length === 0) {
+            portafolioOptionsEl.innerHTML = '<span style="color:#94a3b8; font-size:12px; padding:8px; display:block;">Sin opciones</span>';
+        }
         ports.forEach(p => {
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.textContent = p;
-            chip.className = 'portafolio-chip';
-            if (selectedPortafolios.has(p)) chip.classList.add('active');
-            chip.addEventListener('click', () => {
-                selectedPortafolios.has(p) ? selectedPortafolios.delete(p) : selectedPortafolios.add(p);
-                chip.classList.toggle('active');
+            const label = document.createElement('label');
+            label.className = 'multi-option';
+            const checked = selectedPortafolios.has(p) ? 'checked' : '';
+            label.innerHTML = `<input type="checkbox" data-portafolio="${p.replace(/"/g, '&quot;')}" ${checked} /> <span>${p}</span>`;
+            const input = label.querySelector('input');
+            input.addEventListener('change', () => {
+                input.checked ? selectedPortafolios.add(p) : selectedPortafolios.delete(p);
                 saveURLParams(); renderTable(); updateChipCount();
             });
-            portafolioChipsEl.appendChild(chip);
+            portafolioOptionsEl.appendChild(label);
         });
         updateChipCount();
     }
@@ -571,6 +576,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         el.textContent = selectedPortafolios.size === 0 ? 'Todos' : `${selectedPortafolios.size} seleccionados`;
         el.style.background = selectedPortafolios.size === 0 ? '#e2e8f0' : 'var(--color-brand-dark)';
         el.style.color = selectedPortafolios.size === 0 ? '#475569' : 'white';
+        if (portafolioTriggerText) portafolioTriggerText.textContent = selectedPortafolios.size === 0 ? 'Todos los portafolios' : `${selectedPortafolios.size} portafolios seleccionados`;
     }
 
     // ----------------------------------------------------------------
@@ -1013,8 +1019,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (clearPortBtn) {
         clearPortBtn.addEventListener('click', () => {
             selectedPortafolios.clear();
-            document.querySelectorAll('#portafolio-chips .portafolio-chip').forEach(c => c.classList.remove('active'));
-            saveURLParams(); renderTable(); updateChipCount();
+            document.querySelectorAll('#portafolio-options input[type=\"checkbox\"]').forEach(c => { c.checked = false; });
+            saveURLParams();
+            renderTable();
+            updateChipCount();
         });
     }
 
@@ -1022,8 +1030,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (clearStatusBtn) {
         clearStatusBtn.addEventListener('click', () => {
             selectedStatuses.clear();
-            document.querySelectorAll('#status-chips .portafolio-chip').forEach(c => c.classList.remove('active'));
-            saveURLParams(); renderTable(); updateStatusCount();
+            document.querySelectorAll('#status-options input[type=\"checkbox\"]').forEach(c => { c.checked = false; });
+            saveURLParams();
+            renderTable();
+            updateStatusCount();
         });
     }
 

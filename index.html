@@ -799,6 +799,70 @@
             background: #fef2f2;
         }
 
+        .multi-dropdown {
+            position: relative;
+            width: min(420px, 100%);
+        }
+
+        .multi-dropdown summary {
+            list-style: none;
+            cursor: pointer;
+            user-select: none;
+            padding: 9px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            font-size: 13px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .multi-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .multi-dropdown summary::after {
+            content: '▾';
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        .multi-dropdown[open] summary {
+            border-color: var(--color-brand-dark);
+        }
+
+        .multi-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            max-height: 260px;
+            overflow: auto;
+            background: white;
+            border: 1px solid #dbe4ee;
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            z-index: 60;
+            padding: 8px;
+        }
+
+        .multi-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .multi-option:hover {
+            background: #f8fafc;
+        }
+
         /* Tables */
         .table-card {
             background: white;
@@ -972,7 +1036,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                     <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
                         <div class="num" id="druo-kpi-operativo-null" style="color:#fca5a5;">—</div>
-                        <div class="lbl">No están en DRUO</div>
+                        <div class="lbl">No está en DRUO</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
                         <div class="num" id="druo-kpi-operativo-failed" style="color:#fde68a;">—</div>
@@ -991,7 +1055,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                     <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
                         <div class="num" id="druo-kpi-escrituracion-null" style="color:#fca5a5;">—</div>
-                        <div class="lbl">No están en DRUO</div>
+                        <div class="lbl">No está en DRUO</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
                         <div class="num" id="druo-kpi-escrituracion-failed" style="color:#fde68a;">—</div>
@@ -1113,7 +1177,7 @@
             </div>
             <div class="overview-body" id="overview-body">
                 <div class="overview-legend">
-                    <span class="legend-item"><span class="legend-dot stack-null"></span>No están en DRUO</span>
+                    <span class="legend-item"><span class="legend-dot stack-null"></span>No está en DRUO</span>
                     <span class="legend-item"><span class="legend-dot stack-failed"></span>Desconectados</span>
                     <span class="legend-item"><span class="legend-dot stack-connected"></span>Conectados</span>
                     <span class="legend-item"><span class="legend-dot stack-discarded"></span>Descartados</span>
@@ -1162,9 +1226,12 @@
                                 style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
                             <button id="clear-statuses" class="chip-clear-btn">✕ Limpiar</button>
                         </div>
-                        <div id="status-chips" class="chips-scroll">
-                            <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
-                        </div>
+                        <details id="status-dropdown" class="multi-dropdown">
+                            <summary><span id="status-trigger-text">Seleccionar status</span></summary>
+                            <div id="status-options" class="multi-dropdown-panel">
+                                <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
+                            </div>
+                        </details>
                     </div>
                 </div>
                 <div class="filter-row" style="margin-bottom:16px; border-top:1px solid #f1f5f9; padding-top:16px;">
@@ -1184,9 +1251,12 @@
                             style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
                         <button id="clear-portafolios" class="chip-clear-btn">✕ Limpiar</button>
                     </div>
-                    <div id="portafolio-chips" class="chips-scroll">
-                        <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
-                    </div>
+                    <details id="portafolio-dropdown" class="multi-dropdown">
+                        <summary><span id="portafolio-trigger-text">Seleccionar portafolios</span></summary>
+                        <div id="portafolio-options" class="multi-dropdown-panel">
+                            <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
+                        </div>
+                    </details>
                 </div>
             </div>
             <div class="table-card">
@@ -1222,7 +1292,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <div class="kpi-pill" style="background:rgba(239,68,68,0.12);">
                         <div class="num" id="druo-kpi-push-null" style="color:#ef4444;">—</div>
-                        <div class="lbl" style="color:#991b1b;">No están en DRUO</div>
+                        <div class="lbl" style="color:#991b1b;">No está en DRUO</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(250,204,21,0.12);">
                         <div class="num" id="druo-kpi-push-failed" style="color:#ca8a04;">—</div>
