@@ -113,6 +113,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (status || '').toString().trim().toUpperCase();
     }
 
+    function getNormalizedLifecycle(row) {
+        const segmento = (row?.segmento || '').toString().trim().toLowerCase();
+        if (segmento) return segmento;
+
+        const ciclo = (row?.ciclo_de_vida || '').toString().trim().toLowerCase();
+        if (!ciclo) return 'operativo';
+        return ciclo === 'operativo' ? 'operativo' : 'escrituracion';
+    }
+
+    function isOperativoRow(row) {
+        return getNormalizedLifecycle(row) === 'operativo';
+    }
+
+    function getOperativosRows() {
+        return druoData.filter(isOperativoRow);
+    }
+
     function isConnectedStatus(status) {
         return normalizeDruoStatus(status) === 'CONNECTED';
     }
@@ -144,10 +161,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateKPIs() {
-        const all = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const conectados = druoData.filter(d => isConnectedStatus(d.druo_status));
+        const operativos = getOperativosRows();
+        const all = operativos.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const conectados = operativos.filter(d => isConnectedStatus(d.druo_status));
         const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
-        const pushAll = druoData.filter(d => isCommercialPortfolio(d.portafolio));
+        const pushAll = operativos.filter(d => isCommercialPortfolio(d.portafolio));
         const pushDescartados = descartados.filter(d => isCommercialPortfolio(d.portafolio));
         const pushActivos = pushAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const pushConectados = pushActivos.filter(d => isConnectedStatus(d.druo_status));
@@ -264,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         const byCode = new Map();
-        druoData.forEach(row => {
+        getOperativosRows().forEach(row => {
             const key = row.codigo_inmueble || [
                 row.portafolio || 'sin-portafolio',
                 row.nombre_oportunidad || 'sin-nombre',
@@ -389,7 +407,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildStatusChips() {
         if (!statusChipsEl) return;
         // Only show non-CONNECTED statuses (CONNECTED has its own tab)
-        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(d.druo_status));
+        const ativosBase = getOperativosRows();
+        const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(d.druo_status));
         const statuses = [...new Set(activos.map(d => getStatusFilterKey(d.druo_status)))].sort();
 
         statusChipsEl.innerHTML = '';
@@ -423,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function buildPortafolioChips() {
         if (!portafolioChipsEl) return;
-        const activos = druoData.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const activos = getOperativosRows().filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
         portafolioChipsEl.innerHTML = '';
@@ -480,7 +499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tableBody) return;
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-        const filtered = druoData
+        const filtered = getOperativosRows()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status)) // CONNECTED goes to its own tab
             .filter(d => {
@@ -529,7 +548,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!comercialBody) return;
         const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
 
-        const filtered = druoData
+        const filtered = getOperativosRows()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(d.druo_status))
             .filter(d => isCommercialPortfolio(d.portafolio))
@@ -578,7 +597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filterPort = conectadosPortFilter ? conectadosPortFilter.value : 'all';
 
         // Derive conectados directly from druoData
-        const filtered = druoData
+        const filtered = getOperativosRows()
             .filter(d => isConnectedStatus(d.druo_status))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
@@ -613,7 +632,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildConectadosPortFilter() {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
-            druoData.filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
+            getOperativosRows().filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
         )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
