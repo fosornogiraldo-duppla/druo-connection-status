@@ -65,8 +65,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Supabase fetches
     // ----------------------------------------------------------------
     async function fetchDruoData() {
+        const { data: dataV2, error: errorV2 } = await window.supabaseClient.from('druo_no_conectados_v2').select('*');
+        if (!errorV2) return dataV2 || [];
+
+        console.warn('druo_no_conectados_v2 error, fallback to druo_no_conectados:', errorV2.message);
         const { data, error } = await window.supabaseClient.from('druo_no_conectados').select('*');
-        if (error) { console.error('druo_no_conectados error:', error); return []; }
+        if (error) {
+            console.error('druo_no_conectados fallback error:', error);
+            return [];
+        }
         return data || [];
     }
 
