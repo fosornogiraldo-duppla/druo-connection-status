@@ -15,10 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
 
-    const kpiFailed = document.getElementById('druo-kpi-failed');
-    const kpiNull = document.getElementById('druo-kpi-null');
-    const kpiConectados = document.getElementById('druo-kpi-conectados');
-    const kpiDescartados = document.getElementById('druo-kpi-descartados');
+    const kpiOperativoFailed = document.getElementById('druo-kpi-operativo-failed');
+    const kpiOperativoNull = document.getElementById('druo-kpi-operativo-null');
+    const kpiOperativoConectados = document.getElementById('druo-kpi-operativo-conectados');
+    const kpiOperativoDescartados = document.getElementById('druo-kpi-operativo-descartados');
+    const kpiEscrituracionFailed = document.getElementById('druo-kpi-escrituracion-failed');
+    const kpiEscrituracionNull = document.getElementById('druo-kpi-escrituracion-null');
+    const kpiEscrituracionConectados = document.getElementById('druo-kpi-escrituracion-conectados');
+    const kpiEscrituracionDescartados = document.getElementById('druo-kpi-escrituracion-descartados');
     const kpiPushNull = document.getElementById('druo-kpi-push-null');
     const kpiPushFailed = document.getElementById('druo-kpi-push-failed');
     const kpiPushConectados = document.getElementById('druo-kpi-push-conectados');
@@ -141,6 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return druoData.filter(isOperativoRow);
     }
 
+    function getEscrituracionRows() {
+        return druoData.filter(row => getNormalizedLifecycle(row) === 'escrituracion');
+    }
+
     function isConnectedStatus(status) {
         return normalizeDruoStatus(status) === 'CONNECTED';
     }
@@ -173,19 +181,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateKPIs() {
         const operativos = getOperativosRows();
-        const all = operativos.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const conectados = operativos.filter(d => isConnectedStatus(getRowStatus(d)));
-        const pendientes = all.filter(d => !isConnectedStatus(getRowStatus(d)));
+        const escrituracion = getEscrituracionRows();
+
+        const activosOperativos = operativos.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const conectadosOperativos = activosOperativos.filter(d => isConnectedStatus(getRowStatus(d)));
+        const pendientesOperativos = activosOperativos.filter(d => !isConnectedStatus(getRowStatus(d)));
+
+        const activosEscrituracion = escrituracion.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const conectadosEscrituracion = activosEscrituracion.filter(d => isConnectedStatus(getRowStatus(d)));
+        const pendientesEscrituracion = activosEscrituracion.filter(d => !isConnectedStatus(getRowStatus(d)));
+
+        const lifecycleByCode = new Map(druoData.map(row => [row.codigo_inmueble, getNormalizedLifecycle(row)]));
+        const descOperativos = descartados.filter(d => (lifecycleByCode.get(d.codigo_inmueble) || getNormalizedLifecycle(d)) === 'operativo');
+        const descEscrituracion = descartados.filter(d => (lifecycleByCode.get(d.codigo_inmueble) || getNormalizedLifecycle(d)) === 'escrituracion');
+
         const pushAll = operativos.filter(d => isCommercialPortfolio(d.portafolio));
-        const pushDescartados = descartados.filter(d => isCommercialPortfolio(d.portafolio));
+        const pushDescartados = descOperativos.filter(d => isCommercialPortfolio(d.portafolio));
         const pushActivos = pushAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const pushConectados = pushActivos.filter(d => isConnectedStatus(getRowStatus(d)));
         const pushPendientes = pushActivos.filter(d => !isConnectedStatus(getRowStatus(d)));
 
-        if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
-        if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
-        if (kpiConectados) kpiConectados.textContent = conectados.length;
-        if (kpiDescartados) kpiDescartados.textContent = descartados.length;
+        if (kpiOperativoFailed) kpiOperativoFailed.textContent = pendientesOperativos.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
+        if (kpiOperativoNull) kpiOperativoNull.textContent = pendientesOperativos.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
+        if (kpiOperativoConectados) kpiOperativoConectados.textContent = conectadosOperativos.length;
+        if (kpiOperativoDescartados) kpiOperativoDescartados.textContent = descOperativos.length;
+
+        if (kpiEscrituracionFailed) kpiEscrituracionFailed.textContent = pendientesEscrituracion.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
+        if (kpiEscrituracionNull) kpiEscrituracionNull.textContent = pendientesEscrituracion.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
+        if (kpiEscrituracionConectados) kpiEscrituracionConectados.textContent = conectadosEscrituracion.length;
+        if (kpiEscrituracionDescartados) kpiEscrituracionDescartados.textContent = descEscrituracion.length;
+
         if (kpiPushFailed) kpiPushFailed.textContent = pushPendientes.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
         if (kpiPushNull) kpiPushNull.textContent = pushPendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
         if (kpiPushConectados) kpiPushConectados.textContent = pushConectados.length;

@@ -960,41 +960,41 @@
                 <p>Seguimiento del estado de conexión y gestión de clientes pendientes por portafolio.</p>
             </div>
             <div class="kpi-group">
-                <div class="kpi-group-label">Total portafolios</div>
+                <div class="kpi-group-label">Operativos</div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                     <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
-                        <div class="num" id="druo-kpi-null" style="color:#fca5a5;">—</div>
+                        <div class="num" id="druo-kpi-operativo-null" style="color:#fca5a5;">—</div>
                         <div class="lbl">No están en DRUO</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
-                        <div class="num" id="druo-kpi-failed" style="color:#fde68a;">—</div>
+                        <div class="num" id="druo-kpi-operativo-failed" style="color:#fde68a;">—</div>
                         <div class="lbl">Desconectados</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(34,197,94,0.2);">
-                        <div class="num" id="druo-kpi-conectados" style="color:#86efac;">—</div>
+                        <div class="num" id="druo-kpi-operativo-conectados" style="color:#86efac;">—</div>
                         <div class="lbl">Conectados</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(148,163,184,0.2);">
-                        <div class="num" id="druo-kpi-descartados" style="color:#cbd5e1;">—</div>
+                        <div class="num" id="druo-kpi-operativo-descartados" style="color:#cbd5e1;">—</div>
                         <div class="lbl">Descartados</div>
                     </div>
                 </div>
-                <div class="kpi-group-label">Push 6+ / Progresión</div>
+                <div class="kpi-group-label">Escrituración</div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                     <div class="kpi-pill" style="background:rgba(239,68,68,0.2);">
-                        <div class="num" id="druo-kpi-push-null" style="color:#fca5a5;">—</div>
+                        <div class="num" id="druo-kpi-escrituracion-null" style="color:#fca5a5;">—</div>
                         <div class="lbl">No están en DRUO</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(250,204,21,0.18);">
-                        <div class="num" id="druo-kpi-push-failed" style="color:#fde68a;">—</div>
+                        <div class="num" id="druo-kpi-escrituracion-failed" style="color:#fde68a;">—</div>
                         <div class="lbl">Desconectados</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(34,197,94,0.2);">
-                        <div class="num" id="druo-kpi-push-conectados" style="color:#86efac;">—</div>
+                        <div class="num" id="druo-kpi-escrituracion-conectados" style="color:#86efac;">—</div>
                         <div class="lbl">Conectados</div>
                     </div>
                     <div class="kpi-pill" style="background:rgba(148,163,184,0.2);">
-                        <div class="num" id="druo-kpi-push-descartados" style="color:#cbd5e1;">—</div>
+                        <div class="num" id="druo-kpi-escrituracion-descartados" style="color:#cbd5e1;">—</div>
                         <div class="lbl">Descartados</div>
                     </div>
                 </div>
@@ -1190,6 +1190,29 @@
 
         <!-- ====== VIEW: COMERCIAL ====== -->
         <div id="view-comercial" class="hidden">
+            <div class="filter-card">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;">
+                    <div class="section-label" style="margin-bottom:0;">KPIs Push 6+ / Progresión</div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="kpi-pill" style="background:rgba(239,68,68,0.12);">
+                        <div class="num" id="druo-kpi-push-null" style="color:#ef4444;">—</div>
+                        <div class="lbl" style="color:#991b1b;">No están en DRUO</div>
+                    </div>
+                    <div class="kpi-pill" style="background:rgba(250,204,21,0.12);">
+                        <div class="num" id="druo-kpi-push-failed" style="color:#ca8a04;">—</div>
+                        <div class="lbl" style="color:#854d0e;">Desconectados</div>
+                    </div>
+                    <div class="kpi-pill" style="background:rgba(34,197,94,0.12);">
+                        <div class="num" id="druo-kpi-push-conectados" style="color:#16a34a;">—</div>
+                        <div class="lbl" style="color:#166534;">Conectados</div>
+                    </div>
+                    <div class="kpi-pill" style="background:rgba(148,163,184,0.16);">
+                        <div class="num" id="druo-kpi-push-descartados" style="color:#64748b;">—</div>
+                        <div class="lbl" style="color:#475569;">Descartados</div>
+                    </div>
+                </div>
+            </div>
             <div class="filter-card">
                 <div class="filter-row" style="margin-bottom:0;">
                     <div class="filter-col" style="flex:1; min-width:220px;">
