@@ -201,11 +201,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function getStatusFilterKey(status) {
         if (isMissingInDruoStatus(status)) return 'missing';
+        if (isConnectedStatus(status)) return 'connected';
         return 'disconnected';
     }
 
     function getStatusFilterLabel(statusKey) {
         if (statusKey === 'missing') return 'No está en DRUO';
+        if (statusKey === 'connected') return 'Conectado';
         if (statusKey === 'disconnected') return 'Desconectado';
         return statusKey;
     }
@@ -512,7 +514,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildStatusChips() {
         if (!statusOptionsEl) return;
         const ativosBase = getRowsForSelectedSegment();
-        const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(getRowStatus(d)));
+        const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const statuses = [...new Set(activos.map(d => getStatusFilterKey(getRowStatus(d))))].sort();
 
         statusOptionsEl.innerHTML = '';
@@ -583,6 +585,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Badge HTML helper
     // ----------------------------------------------------------------
     function statusBadge(status, isFailed) {
+        if (isConnectedStatus(status)) {
+            return '<span style="display:inline-block;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">Conectado</span>';
+        }
         const bg = isFailed ? '#fee2e2' : '#f1f5f9';
         const color = isFailed ? '#b91c1c' : '#475569';
         const border = isFailed ? '#fca5a5' : '#cbd5e1';
@@ -628,7 +633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => !isConnectedStatus(getRowStatus(d))) // CONNECTED goes to its own tab
             .filter(d => {
                 if (selectedStatuses.size === 0) return true;
                 const dStatus = getStatusFilterKey(getRowStatus(d));
