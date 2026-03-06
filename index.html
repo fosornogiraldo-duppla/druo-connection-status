@@ -816,7 +816,7 @@
         }
 
         thead th {
-            padding: 13px 18px;
+            padding: 10px 12px;
             color: #94a3b8;
             font-size: 11px;
             text-transform: uppercase;
@@ -831,7 +831,7 @@
             cursor: pointer;
             user-select: none;
             position: relative;
-            padding-right: 28px;
+            padding-right: 24px;
         }
 
         thead th.th-sortable::after {
@@ -855,9 +855,17 @@
         }
 
         tbody td {
-            padding: 13px 18px;
+            padding: 9px 12px;
             border-bottom: 1px solid #f8fafc;
-            font-size: 13px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .table-card td,
+        .table-card td * {
+            font-size: 12px !important;
         }
 
         tbody tr:last-child td {
