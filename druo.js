@@ -409,9 +409,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         chartTooltip.classList.remove('visible');
     }
 
+    function arrangeRowsForColumnReading(rows) {
+        const leftCount = Math.ceil(rows.length / 2);
+        const left = rows.slice(0, leftCount);
+        const right = rows.slice(leftCount);
+        const arranged = [];
+
+        for (let i = 0; i < leftCount; i += 1) {
+            if (left[i]) arranged.push(left[i]);
+            if (right[i]) arranged.push(right[i]);
+        }
+
+        return arranged;
+    }
+
     function renderPortfolioOverview() {
         if (!portfolioOverview) return;
         const rows = getOverviewRows();
+        const displayRows = arrangeRowsForColumnReading(rows);
         const totalActivos = rows.reduce((acc, row) => acc + row.total, 0);
 
         if (overviewTotalActivos) {
@@ -423,7 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        portfolioOverview.innerHTML = rows.map(row => `
+        portfolioOverview.innerHTML = displayRows.map(row => `
             <div class="portfolio-row">
                 <div class="portfolio-name" title="${row.portafolio}: ${row.total} operativos">
                     <span>${row.portafolio}</span>
