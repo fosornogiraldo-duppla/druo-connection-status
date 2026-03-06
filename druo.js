@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comercialSearch = document.getElementById('comercial-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
+    const globalSegmentFilter = document.getElementById('global-segment-filter');
 
     const kpiOperativoFailed = document.getElementById('druo-kpi-operativo-failed');
     const kpiOperativoNull = document.getElementById('druo-kpi-operativo-null');
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let descartadosCodes = new Set();
     let selectedPortafolios = new Set();
     let selectedStatuses = new Set(); // empty = all statuses
+    let selectedSegment = 'all';
     let pendingDiscardRow = null;
     const tableSortState = {
         pendientes: { key: null, direction: 'asc' },
@@ -53,13 +55,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return {
             statuses: p.get('statuses') ? p.get('statuses').split(',') : [],
             portafolios: p.get('portafolios') ? p.get('portafolios').split(',') : [],
-            search: p.get('search') || ''
+            search: p.get('search') || '',
+            segment: p.get('segment') || 'all'
         };
     }
     function saveURLParams() {
         const params = new URLSearchParams();
         if (selectedStatuses.size > 0) params.set('statuses', [...selectedStatuses].join(','));
         if (selectedPortafolios.size > 0) params.set('portafolios', [...selectedPortafolios].join(','));
+        if (selectedSegment !== 'all') params.set('segment', selectedSegment);
         const search = searchInput ? searchInput.value.trim() : '';
         if (search) params.set('search', search);
         window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`);
@@ -147,6 +151,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function getEscrituracionRows() {
         return druoData.filter(row => getNormalizedLifecycle(row) === 'escrituracion');
+    }
+
+    function getRowsForSelectedSegment() {
+        if (selectedSegment === 'operativo') return getOperativosRows();
+        if (selectedSegment === 'escrituracion') return getEscrituracionRows();
+        return druoData;
     }
 
     function isConnectedStatus(status) {
@@ -462,7 +472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildStatusChips() {
         if (!statusChipsEl) return;
         // Only show non-CONNECTED statuses (CONNECTED has its own tab)
-        const ativosBase = getOperativosRows();
+        const ativosBase = getRowsForSelectedSegment();
         const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(getRowStatus(d)));
         const statuses = [...new Set(activos.map(d => getStatusFilterKey(getRowStatus(d))))].sort();
 
@@ -497,7 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function buildPortafolioChips() {
         if (!portafolioChipsEl) return;
-        const activos = getOperativosRows().filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const activos = getRowsForSelectedSegment().filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const ports = [...new Set(activos.map(d => d.portafolio).filter(Boolean))].sort(comparePortafolios);
 
         portafolioChipsEl.innerHTML = '';
@@ -554,7 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tableBody) return;
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-        const filtered = getOperativosRows()
+        const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d))) // CONNECTED goes to its own tab
             .filter(d => {
@@ -604,7 +614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!comercialBody) return;
         const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
 
-        const filtered = getOperativosRows()
+        const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isCommercialPortfolio(d.portafolio))
@@ -654,7 +664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filterPort = conectadosPortFilter ? conectadosPortFilter.value : 'all';
 
         // Derive conectados directly from druoData
-        const filtered = getOperativosRows()
+        const filtered = getRowsForSelectedSegment()
             .filter(d => isConnectedStatus(getRowStatus(d)))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
@@ -689,7 +699,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildConectadosPortFilter() {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
-            getOperativosRows().filter(d => isConnectedStatus(getRowStatus(d))).map(d => d.portafolio).filter(Boolean)
+            getRowsForSelectedSegment().filter(d => isConnectedStatus(getRowStatus(d))).map(d => d.portafolio).filter(Boolean)
         )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
@@ -838,6 +848,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
+    if (globalSegmentFilter) {
+        globalSegmentFilter.addEventListener('change', () => {
+            selectedSegment = globalSegmentFilter.value || 'all';
+            selectedStatuses.clear();
+            selectedPortafolios.clear();
+            saveURLParams();
+            buildStatusChips();
+            buildPortafolioChips();
+            buildConectadosPortFilter();
+            renderTable();
+            renderComercial();
+            renderConectados();
+        });
+    }
     document.querySelectorAll('th.th-sortable').forEach(th => {
         th.addEventListener('click', () => {
             const tableName = th.dataset.table;
@@ -898,6 +922,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     const urlP = getURLParams();
     if (searchInput) searchInput.value = urlP.search;
+    selectedSegment = ['all', 'operativo', 'escrituracion'].includes(urlP.segment) ? urlP.segment : 'all';
+    if (globalSegmentFilter) globalSegmentFilter.value = selectedSegment;
     urlP.portafolios.forEach(p => selectedPortafolios.add(p));
     urlP.statuses.forEach(s => selectedStatuses.add(s));
 
