@@ -159,10 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function isMissingInDruoStatus(status) {
-        return !normalizeDruoStatus(status);
+        const normalized = normalizeDruoStatus(status);
+        return !normalized || normalized === 'SIN INSCRIPCION' || normalized === 'SIN_INSCRIPCION';
     }
 
     function displayStatusLabel(status) {
+        if (isConnectedStatus(status)) return 'Conectado';
         if (isMissingInDruoStatus(status)) return 'No están en DRUO';
         if (isDisconnectedStatus(status)) return 'Desconectado';
         return 'Desconectado';
