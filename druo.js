@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             nombre_oportunidad: row.nombre_oportunidad,
             propietario_oportunidad: row.propietario_oportunidad,
             portafolio: row.portafolio,
-            druo_status: row.druo_status,
+            druo_status: row.druo_status || row.status || null,
             razon_descarte: razon,
             descartado_at: new Date().toISOString()
         }], { onConflict: 'codigo_inmueble' });
@@ -111,6 +111,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function normalizeDruoStatus(status) {
         return (status || '').toString().trim().toUpperCase();
+    }
+
+    function getRowStatus(row) {
+        return row?.druo_status ?? row?.status ?? null;
     }
 
     function getNormalizedLifecycle(row) {
@@ -163,20 +167,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateKPIs() {
         const operativos = getOperativosRows();
         const all = operativos.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const conectados = operativos.filter(d => isConnectedStatus(d.druo_status));
-        const pendientes = all.filter(d => !isConnectedStatus(d.druo_status));
+        const conectados = operativos.filter(d => isConnectedStatus(getRowStatus(d)));
+        const pendientes = all.filter(d => !isConnectedStatus(getRowStatus(d)));
         const pushAll = operativos.filter(d => isCommercialPortfolio(d.portafolio));
         const pushDescartados = descartados.filter(d => isCommercialPortfolio(d.portafolio));
         const pushActivos = pushAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
-        const pushConectados = pushActivos.filter(d => isConnectedStatus(d.druo_status));
-        const pushPendientes = pushActivos.filter(d => !isConnectedStatus(d.druo_status));
+        const pushConectados = pushActivos.filter(d => isConnectedStatus(getRowStatus(d)));
+        const pushPendientes = pushActivos.filter(d => !isConnectedStatus(getRowStatus(d)));
 
-        if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
-        if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
+        if (kpiFailed) kpiFailed.textContent = pendientes.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
+        if (kpiNull) kpiNull.textContent = pendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
         if (kpiConectados) kpiConectados.textContent = conectados.length;
         if (kpiDescartados) kpiDescartados.textContent = descartados.length;
-        if (kpiPushFailed) kpiPushFailed.textContent = pushPendientes.filter(d => isDisconnectedStatus(d.druo_status)).length;
-        if (kpiPushNull) kpiPushNull.textContent = pushPendientes.filter(d => isMissingInDruoStatus(d.druo_status)).length;
+        if (kpiPushFailed) kpiPushFailed.textContent = pushPendientes.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
+        if (kpiPushNull) kpiPushNull.textContent = pushPendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
         if (kpiPushConectados) kpiPushConectados.textContent = pushConectados.length;
         if (kpiPushDescartados) kpiPushDescartados.textContent = pushDescartados.length;
     }
@@ -231,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function getRowSortValue(row, key) {
         if (key === 'portafolio') return row.portafolio || 'Sin portafolio';
-        if (key === 'druo_status') return displayStatusLabel(row.druo_status);
+        if (key === 'druo_status') return displayStatusLabel(getRowStatus(row));
         if (key === 'fecha_entrega' || key === 'descartado_at') return row[key] ? new Date(row[key]).getTime() : Number.NEGATIVE_INFINITY;
         return row[key] ?? '';
     }
@@ -294,18 +298,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const currentScore = isConnectedStatus(current.druo_status)
+            const currentStatus = getRowStatus(current);
+            const nextStatus = getRowStatus(row);
+            const currentScore = isConnectedStatus(currentStatus)
                 ? 3
-                : isDisconnectedStatus(current.druo_status)
+                : isDisconnectedStatus(currentStatus)
                     ? 2
-                    : normalizeDruoStatus(current.druo_status)
+                    : normalizeDruoStatus(currentStatus)
                         ? 1
                         : 0;
-            const nextScore = isConnectedStatus(row.druo_status)
+            const nextScore = isConnectedStatus(nextStatus)
                 ? 3
-                : isDisconnectedStatus(row.druo_status)
+                : isDisconnectedStatus(nextStatus)
                     ? 2
-                    : normalizeDruoStatus(row.druo_status)
+                    : normalizeDruoStatus(nextStatus)
                         ? 1
                         : 0;
 
@@ -331,11 +337,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (descartadosCodes.has(row.codigo_inmueble)) {
                 bucket.discarded += 1;
-            } else if (isConnectedStatus(row.druo_status)) {
+            } else if (isConnectedStatus(getRowStatus(row))) {
                 bucket.connected += 1;
-            } else if (isDisconnectedStatus(row.druo_status)) {
+            } else if (isDisconnectedStatus(getRowStatus(row))) {
                 bucket.failed += 1;
-            } else if (isMissingInDruoStatus(row.druo_status)) {
+            } else if (isMissingInDruoStatus(getRowStatus(row))) {
                 bucket.sinIntentar += 1;
             } else {
                 bucket.failed += 1;
@@ -408,8 +414,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!statusChipsEl) return;
         // Only show non-CONNECTED statuses (CONNECTED has its own tab)
         const ativosBase = getOperativosRows();
-        const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(d.druo_status));
-        const statuses = [...new Set(activos.map(d => getStatusFilterKey(d.druo_status)))].sort();
+        const activos = ativosBase.filter(d => !descartadosCodes.has(d.codigo_inmueble) && !isConnectedStatus(getRowStatus(d)));
+        const statuses = [...new Set(activos.map(d => getStatusFilterKey(getRowStatus(d))))].sort();
 
         statusChipsEl.innerHTML = '';
         statuses.forEach(s => {
@@ -501,10 +507,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const filtered = getOperativosRows()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => !isConnectedStatus(d.druo_status)) // CONNECTED goes to its own tab
+            .filter(d => !isConnectedStatus(getRowStatus(d))) // CONNECTED goes to its own tab
             .filter(d => {
                 if (selectedStatuses.size === 0) return true;
-                const dStatus = getStatusFilterKey(d.druo_status);
+                const dStatus = getStatusFilterKey(getRowStatus(d));
                 return selectedStatuses.has(dStatus);
             })
             .filter(d => selectedPortafolios.size === 0 || selectedPortafolios.has(d.portafolio))
@@ -524,8 +530,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         sorted.forEach(d => {
-            const isFailed = isDisconnectedStatus(d.druo_status);
-            const badge = statusBadge(d.druo_status, isFailed);
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
             row.innerHTML = `
@@ -550,7 +557,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const filtered = getOperativosRows()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => !isConnectedStatus(d.druo_status))
+            .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isCommercialPortfolio(d.portafolio))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
@@ -568,8 +575,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         sorted.forEach(d => {
-            const isFailed = isDisconnectedStatus(d.druo_status);
-            const badge = statusBadge(d.druo_status, isFailed);
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
             const row = document.createElement('tr');
             row.style.cursor = 'pointer';
             row.innerHTML = `
@@ -598,7 +606,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Derive conectados directly from druoData
         const filtered = getOperativosRows()
-            .filter(d => isConnectedStatus(d.druo_status))
+            .filter(d => isConnectedStatus(getRowStatus(d)))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
@@ -632,7 +640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildConectadosPortFilter() {
         if (!conectadosPortFilter) return;
         const ports = [...new Set(
-            getOperativosRows().filter(d => isConnectedStatus(d.druo_status)).map(d => d.portafolio).filter(Boolean)
+            getOperativosRows().filter(d => isConnectedStatus(getRowStatus(d))).map(d => d.portafolio).filter(Boolean)
         )].sort(comparePortafolios);
         conectadosPortFilter.innerHTML = '<option value="all">Todos los portafolios</option>';
         ports.forEach(p => {
@@ -654,7 +662,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         sorted.forEach(d => {
-            const isFailed = isDisconnectedStatus(d.druo_status);
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
             const date = d.descartado_at
                 ? new Date(d.descartado_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
                 : '-';
@@ -664,7 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${d.nombre_oportunidad || '-'}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
-                <td>${statusBadge(d.druo_status, isFailed)}</td>
+                <td>${statusBadge(rowStatus, isFailed)}</td>
                 <td>${remarksCell(d.remarks)}</td>
                 <td style="color:#475569;font-size:12px;max-width:200px;">${d.razon_descarte || '-'}</td>
                 <td style="color:#94a3b8;font-size:12px;">${date}</td>
@@ -748,7 +757,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             codigo_inmueble: pendingDiscardRow.codigo_inmueble,
             nombre_oportunidad: pendingDiscardRow.nombre_oportunidad,
             portafolio: pendingDiscardRow.portafolio,
-            druo_status: pendingDiscardRow.druo_status,
+            druo_status: getRowStatus(pendingDiscardRow),
             razon_descarte: razon,
             descartado_at: new Date().toISOString()
         });
