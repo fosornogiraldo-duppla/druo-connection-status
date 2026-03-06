@@ -128,17 +128,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (status || '').toString().trim().toUpperCase();
     }
 
+    function normalizeText(value) {
+        return (value || '')
+            .toString()
+            .trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
+
     function getRowStatus(row) {
         return row?.druo_status ?? row?.status ?? null;
     }
 
     function getNormalizedLifecycle(row) {
-        const segmento = (row?.segmento || '').toString().trim().toLowerCase();
-        if (segmento) return segmento;
+        const segmento = normalizeText(row?.segmento);
+        if (segmento) {
+            if (segmento.includes('oper')) return 'operativo';
+            if (segmento.includes('escr')) return 'escrituracion';
+            return 'desconocido';
+        }
 
-        const ciclo = (row?.ciclo_de_vida || '').toString().trim().toLowerCase();
-        if (!ciclo) return 'operativo';
-        return ciclo === 'operativo' ? 'operativo' : 'escrituracion';
+        const ciclo = normalizeText(row?.ciclo_de_vida);
+        if (ciclo.includes('oper')) return 'operativo';
+        if (ciclo.includes('escr')) return 'escrituracion';
+        return 'desconocido';
     }
 
     function isOperativoRow(row) {
