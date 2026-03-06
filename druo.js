@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedSegment = 'all';
     let pendingDiscardRow = null;
     const tableSortState = {
-        pendientes: { key: null, direction: 'asc' },
+        pendientes: { key: 'fecha_entrega', direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
         escrituracion: { key: null, direction: 'asc' },
         conectados: { key: null, direction: 'asc' },
