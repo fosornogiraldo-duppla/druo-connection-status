@@ -111,9 +111,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error } = await window.supabaseClient.from('druo_descartados').upsert([{
             codigo_inmueble: row.codigo_inmueble,
             nombre_oportunidad: row.nombre_oportunidad,
+            tipo_cliente: row.tipo_cliente,
             propietario_oportunidad: row.propietario_oportunidad,
             portafolio: row.portafolio,
             druo_status: row.druo_status || row.status || null,
+            fecha_entrega: row.fecha_entrega || null,
             razon_descarte: razon,
             descartado_at: new Date().toISOString()
         }], { onConflict: 'codigo_inmueble' });
@@ -624,6 +626,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div title="${title}" style="max-width:260px;line-height:1.35;color:#334155;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;white-space:normal;word-break:break-word;">${text}</div>`;
     }
 
+    function clientTypeCell(clientType) {
+        const text = (clientType || '').toString().trim();
+        if (!text) return '<span style="color:#cbd5e1;">-</span>';
+        return `<span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">${text}</span>`;
+    }
+
     // ----------------------------------------------------------------
     // Render: Pendientes table
     // ----------------------------------------------------------------
@@ -650,7 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (sorted.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -665,6 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
@@ -696,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (sorted.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -711,6 +720,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
@@ -743,7 +753,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         escrituracionBody.innerHTML = '';
         if (sorted.length === 0) {
-            escrituracionBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
+            escrituracionBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
             return;
         }
 
@@ -758,6 +768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${badge}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
@@ -847,6 +858,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${lifecycleBadge(d)}</td>
                 <td><strong>${d.codigo_inmueble || '-'}</strong></td>
                 <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
                 <td>${ownerCell(d.propietario_oportunidad)}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${statusBadge(rowStatus, isFailed)}</td>
