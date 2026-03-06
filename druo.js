@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ---- DOM refs ----
     const tableBody = document.getElementById('druo-tbody');
     const comercialBody = document.getElementById('comercial-tbody');
+    const escrituracionBody = document.getElementById('escrituracion-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
     const conectadosBody = document.getElementById('conectados-tbody');
     const portfolioOverview = document.getElementById('portfolio-overview');
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const portafolioChipsEl = document.getElementById('portafolio-chips');
     const searchInput = document.getElementById('druo-search-input');
     const comercialSearch = document.getElementById('comercial-search-input');
+    const escrituracionSearch = document.getElementById('escrituracion-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
     const globalSegmentFilter = document.getElementById('global-segment-filter');
@@ -43,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableSortState = {
         pendientes: { key: null, direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
+        escrituracion: { key: null, direction: 'asc' },
         conectados: { key: null, direction: 'asc' },
         descartados: { key: null, direction: 'asc' }
     };
@@ -669,6 +672,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function renderEscrituracionPush() {
+        if (!escrituracionBody) return;
+        const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
+
+        const filtered = druoData
+            .filter(d => getNormalizedLifecycle(d) === 'escrituracion')
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => !isConnectedStatus(getRowStatus(d)))
+            .filter(d => isMissingInDruoStatus(getRowStatus(d)) || isDisconnectedStatus(getRowStatus(d)))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+
+        const sorted = sortRows(filtered, 'escrituracion');
+        const countEl = document.getElementById('escrituracion-count');
+        if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
+
+        escrituracionBody.innerHTML = '';
+        if (sorted.length === 0) {
+            escrituracionBody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
+            return;
+        }
+
+        sorted.forEach(d => {
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${d.nombre_oportunidad || '-'}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
+                <td>${badge}</td>
+                <td>${remarksCell(d.remarks)}</td>
+                <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
+            `;
+            row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
+            row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
+            escrituracionBody.appendChild(row);
+        });
+    }
+
     // ----------------------------------------------------------------
     // Render: Conectados table
     // ----------------------------------------------------------------
@@ -860,6 +909,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
+    if (escrituracionSearch) escrituracionSearch.addEventListener('input', renderEscrituracionPush);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
     if (globalSegmentFilter) {
@@ -873,6 +923,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             buildConectadosPortFilter();
             renderTable();
             renderComercial();
+            renderEscrituracionPush();
             renderConectados();
         });
     }
@@ -894,6 +945,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (tableName === 'pendientes') renderTable();
             if (tableName === 'comercial') renderComercial();
+            if (tableName === 'escrituracion') renderEscrituracionPush();
             if (tableName === 'conectados') renderConectados();
             if (tableName === 'descartados') renderDescartados();
         });
@@ -957,6 +1009,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildConectadosPortFilter();
     renderTable();
     renderComercial();
+    renderEscrituracionPush();
     renderDescartados();
     renderConectados();
     updateSortHeaders();
