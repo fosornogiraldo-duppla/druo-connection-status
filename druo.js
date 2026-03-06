@@ -603,7 +603,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function ownerCell(owner) {
         const text = (owner || '').toString().trim();
         if (!text) return '<span style="color:#cbd5e1;">-</span>';
-        return `<div style="font-size:13px;line-height:1.45;color:#334155;white-space:normal;">${text}</div>`;
+        const title = text.replace(/"/g, '&quot;');
+        return `<div title="${title}" style="max-width:240px;line-height:1.35;color:#334155;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;white-space:normal;word-break:break-word;">${text}</div>`;
     }
 
     // ----------------------------------------------------------------
