@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const match = normalized.match(/duppla beneficio\s+(\d+)/);
         if (!match) return false;
 
-        return Number(match[1]) >= 6;
+        return Number(match[1]) >= 5;
     }
 
     function comparePortafolios(a, b) {
