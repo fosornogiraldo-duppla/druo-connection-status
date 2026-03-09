@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
     const globalSegmentFilter = document.getElementById('global-segment-filter');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
 
     const kpiOperativoFailed = document.getElementById('druo-kpi-operativo-failed');
     const kpiOperativoNull = document.getElementById('druo-kpi-operativo-null');
@@ -671,13 +672,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">${text}</span>`;
     }
 
-    // ----------------------------------------------------------------
-    // Render: Pendientes table
-    // ----------------------------------------------------------------
-    function renderTable() {
-        if (!tableBody) return;
+    function getFilteredPendientesRows() {
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
@@ -686,8 +682,170 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
                 || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+        return sortRows(filtered, 'pendientes');
+    }
 
-        const sorted = sortRows(filtered, 'pendientes');
+    function getFilteredComercialRows() {
+        const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
+        const filtered = getRowsForSelectedSegment()
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => !isConnectedStatus(getRowStatus(d)))
+            .filter(d => isCommercialPortfolio(d.portafolio))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+        return sortRows(filtered, 'comercial');
+    }
+
+    function getFilteredEscrituracionRows() {
+        const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
+        const filtered = druoData
+            .filter(d => getNormalizedLifecycle(d) === 'escrituracion')
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => !isConnectedStatus(getRowStatus(d)))
+            .filter(d => isMissingInDruoStatus(getRowStatus(d)) || isDisconnectedStatus(getRowStatus(d)))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+        return sortRows(filtered, 'escrituracion');
+    }
+
+    function getFilteredDescartadosRows() {
+        return sortRows(descartados.filter(d => matchesSelectedStatus(getRowStatus(d))), 'descartados');
+    }
+
+    function getActiveView() {
+        const views = ['pendientes', 'comercial', 'escrituracion', 'descartados'];
+        const active = views.find(v => {
+            const el = document.getElementById(`view-${v}`);
+            return el && !el.classList.contains('hidden');
+        });
+        return active || 'pendientes';
+    }
+
+    function csvEscape(value) {
+        const text = (value ?? '').toString().replace(/\r?\n/g, ' ').trim();
+        if (text.includes('"') || text.includes(',') || text.includes(';')) {
+            return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+    }
+
+    function downloadCsv(filename, headers, rows) {
+        const headerLine = headers.map(csvEscape).join(',');
+        const bodyLines = rows.map(row => row.map(csvEscape).join(','));
+        const csv = [headerLine, ...bodyLines].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportCurrentViewToCsv() {
+        const view = getActiveView();
+        const today = new Date().toISOString().slice(0, 10);
+        const sharedHeaders = [
+            'Estado inmueble',
+            'Status DRUO',
+            'Codigo Inmueble',
+            'Oportunidad / Cliente',
+            'Tipo cliente',
+            'Comercial',
+            'Fecha Entrega',
+            'Portafolio',
+            'Remarks'
+        ];
+
+        if (view === 'pendientes') {
+            const rows = getFilteredPendientesRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-pendientes-${today}.csv`, sharedHeaders, rows);
+        }
+
+        if (view === 'comercial') {
+            const rows = getFilteredComercialRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-push-5-mas-${today}.csv`, sharedHeaders, rows);
+        }
+
+        if (view === 'escrituracion') {
+            const rows = getFilteredEscrituracionRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-push-escrituracion-${today}.csv`, sharedHeaders, rows);
+        }
+
+        const rows = getFilteredDescartadosRows().map(d => [
+            getNormalizedLifecycle(d),
+            displayStatusLabel(getRowStatus(d)),
+            d.codigo_inmueble || '',
+            d.nombre_oportunidad || '',
+            d.tipo_cliente || '',
+            d.propietario_oportunidad || '',
+            d.portafolio || '',
+            d.remarks || '',
+            d.razon_descarte || '',
+            d.descartado_at || ''
+        ]);
+        return downloadCsv(
+            `druo-descartados-${today}.csv`,
+            [
+                'Estado inmueble',
+                'Status DRUO',
+                'Codigo Inmueble',
+                'Oportunidad / Cliente',
+                'Tipo cliente',
+                'Comercial',
+                'Portafolio',
+                'Remarks',
+                'Razon de descarte',
+                'Fecha descarte'
+            ],
+            rows
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // Render: Pendientes table
+    // ----------------------------------------------------------------
+    function renderTable() {
+        if (!tableBody) return;
+        const sorted = getFilteredPendientesRows();
         const rc = document.getElementById('result-count');
         if (rc) rc.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
@@ -723,19 +881,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderComercial() {
         if (!comercialBody) return;
-        const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
-
-        const filtered = getRowsForSelectedSegment()
-            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => !isConnectedStatus(getRowStatus(d)))
-            .filter(d => isCommercialPortfolio(d.portafolio))
-            .filter(d => matchesSelectedStatus(getRowStatus(d)))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
-
-        const sorted = sortRows(filtered, 'comercial');
+        const sorted = getFilteredComercialRows();
         const cc = document.getElementById('comercial-count');
         if (cc) cc.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
@@ -771,20 +917,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderEscrituracionPush() {
         if (!escrituracionBody) return;
-        const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
-
-        const filtered = druoData
-            .filter(d => getNormalizedLifecycle(d) === 'escrituracion')
-            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => !isConnectedStatus(getRowStatus(d)))
-            .filter(d => isMissingInDruoStatus(getRowStatus(d)) || isDisconnectedStatus(getRowStatus(d)))
-            .filter(d => matchesSelectedStatus(getRowStatus(d)))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
-
-        const sorted = sortRows(filtered, 'escrituracion');
+        const sorted = getFilteredEscrituracionRows();
         const countEl = document.getElementById('escrituracion-count');
         if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
 
@@ -878,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function renderDescartados() {
         if (!descartadosBody) return;
-        const sorted = sortRows(descartados.filter(d => matchesSelectedStatus(getRowStatus(d))), 'descartados');
+        const sorted = getFilteredDescartadosRows();
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
             descartadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados para el status seleccionado.</td></tr>';
@@ -1092,6 +1225,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderDescartados();
             updateStatusCount();
         });
+    }
+
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportCurrentViewToCsv);
     }
 
     // ----------------------------------------------------------------
