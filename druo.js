@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ---- DOM refs ----
     const tableBody = document.getElementById('druo-tbody');
+    const entregaBody = document.getElementById('entrega-tbody');
     const comercialBody = document.getElementById('comercial-tbody');
     const escrituracionBody = document.getElementById('escrituracion-tbody');
     const descartadosBody = document.getElementById('druo-descartados-tbody');
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusTriggerText = document.getElementById('status-trigger-text');
     const portafolioTriggerText = document.getElementById('portafolio-trigger-text');
     const searchInput = document.getElementById('druo-search-input');
+    const entregaSearch = document.getElementById('entrega-search-input');
     const comercialSearch = document.getElementById('comercial-search-input');
     const escrituracionSearch = document.getElementById('escrituracion-search-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let pendingDiscardRow = null;
     const tableSortState = {
         pendientes: { key: 'fecha_entrega', direction: 'asc' },
+        entrega: { key: 'fecha_entrega', direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
         escrituracion: { key: null, direction: 'asc' },
         conectados: { key: null, direction: 'asc' },
@@ -568,6 +571,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 input.checked ? selectedStatuses.add(s) : selectedStatuses.delete(s);
                 saveURLParams();
                 renderTable();
+                renderEntrega();
                 renderComercial();
                 renderEscrituracionPush();
                 renderDescartados();
@@ -672,6 +676,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">${text}</span>`;
     }
 
+    function isMissingOrWithinOneYear(fechaEntrega) {
+        if (!fechaEntrega) return true;
+        const date = new Date(fechaEntrega);
+        if (Number.isNaN(date.getTime())) return false;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const oneYearAhead = new Date(today);
+        oneYearAhead.setFullYear(oneYearAhead.getFullYear() + 1);
+        return date >= today && date <= oneYearAhead;
+    }
+
     function getFilteredPendientesRows() {
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
         const filtered = getRowsForSelectedSegment()
@@ -699,6 +715,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         return sortRows(filtered, 'comercial');
     }
 
+    function getFilteredEntregaRows() {
+        const searchTxt = entregaSearch ? entregaSearch.value.toLowerCase().trim() : '';
+        const filtered = getRowsForSelectedSegment()
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
+            .filter(d => isMissingOrWithinOneYear(d.fecha_entrega))
+            .filter(d => !searchTxt
+                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+        return sortRows(filtered, 'entrega');
+    }
+
     function getFilteredEscrituracionRows() {
         const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
         const filtered = druoData
@@ -719,7 +748,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getActiveView() {
-        const views = ['pendientes', 'comercial', 'escrituracion', 'descartados'];
+        const views = ['pendientes', 'entrega', 'comercial', 'escrituracion', 'descartados'];
         const active = views.find(v => {
             const el = document.getElementById(`view-${v}`);
             return el && !el.classList.contains('hidden');
@@ -793,6 +822,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 d.remarks || ''
             ]);
             return downloadCsv(`druo-push-5-mas-${today}.csv`, sharedHeaders, rows);
+        }
+
+        if (view === 'entrega') {
+            const rows = getFilteredEntregaRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-entrega-menos-1-anio-${today}.csv`, sharedHeaders, rows);
         }
 
         if (view === 'escrituracion') {
@@ -876,6 +920,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
             row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
             tableBody.appendChild(row);
+        });
+    }
+
+    function renderEntrega() {
+        if (!entregaBody) return;
+        const sorted = getFilteredEntregaRows();
+        const countEl = document.getElementById('entrega-count');
+        if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
+
+        entregaBody.innerHTML = '';
+        if (sorted.length === 0) {
+            entregaBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes sin fecha o con fecha de entrega menor a 1 año.</td></tr>';
+            return;
+        }
+
+        sorted.forEach(d => {
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : 'Sin fecha'}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td>${remarksCell(d.remarks)}</td>
+                <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
+            `;
+            row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
+            row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
+            entregaBody.appendChild(row);
         });
     }
 
@@ -1124,7 +1204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingDiscardRow = null;
         closeModal('discard-modal');
         btn.disabled = false; btn.textContent = 'Descartar';
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     });
 
     // ----------------------------------------------------------------
@@ -1135,7 +1215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { alert('Error al restaurar.'); return; }
         descartados = descartados.filter(d => d.codigo_inmueble !== codigo_inmueble);
         descartadosCodes.delete(codigo_inmueble);
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     }
 
     // Helper exposed globally
@@ -1145,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Event listeners
     // ----------------------------------------------------------------
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
+    if (entregaSearch) entregaSearch.addEventListener('input', renderEntrega);
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
     if (escrituracionSearch) escrituracionSearch.addEventListener('input', renderEscrituracionPush);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
@@ -1159,6 +1240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             buildPortafolioChips();
             buildConectadosPortFilter();
             renderTable();
+            renderEntrega();
             renderComercial();
             renderEscrituracionPush();
             renderConectados();
@@ -1181,6 +1263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateSortHeaders();
 
             if (tableName === 'pendientes') renderTable();
+            if (tableName === 'entrega') renderEntrega();
             if (tableName === 'comercial') renderComercial();
             if (tableName === 'escrituracion') renderEscrituracionPush();
             if (tableName === 'conectados') renderConectados();
@@ -1220,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('#status-options input[type=\"checkbox\"]').forEach(c => { c.checked = false; });
             saveURLParams();
             renderTable();
+            renderEntrega();
             renderComercial();
             renderEscrituracionPush();
             renderDescartados();
@@ -1256,6 +1340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildPortafolioChips();
     buildConectadosPortFilter();
     renderTable();
+    renderEntrega();
     renderComercial();
     renderEscrituracionPush();
     renderDescartados();
