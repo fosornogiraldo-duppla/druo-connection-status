@@ -1179,6 +1179,25 @@
             <button class="view-tab" id="tab-descartados" onclick="switchView('descartados')">🗂 Descartados</button>
         </div>
 
+        <div class="filter-card" style="margin-top:16px;">
+            <div class="filter-row" style="margin-bottom:0;">
+                <div class="filter-col" style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:9px;">
+                        <div class="section-label" style="margin-bottom:0;">Status DRUO (todas las vistas)</div>
+                        <span id="status-count"
+                            style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
+                        <button id="clear-statuses" class="chip-clear-btn">✕ Limpiar</button>
+                    </div>
+                    <details id="status-dropdown" class="multi-dropdown">
+                        <summary><span id="status-trigger-text">Seleccionar status</span></summary>
+                        <div id="status-options" class="multi-dropdown-panel">
+                            <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+
         <!-- ====== VIEW: PENDIENTES ====== -->
         <div id="view-pendientes">
             <div class="filter-card">
@@ -1193,23 +1212,6 @@
                     </div>
                     <div style="margin-left:auto; padding-top:24px; font-size:12px; color:#64748b;">
                         Aplica a las tablas de pendientes y push.
-                    </div>
-                </div>
-                <!-- Row 1: Status chips + Search + count -->
-                <div class="filter-row" style="margin-bottom:16px;">
-                    <div class="filter-col" style="flex:1;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:9px;">
-                            <div class="section-label" style="margin-bottom:0;">Status DRUO</div>
-                            <span id="status-count"
-                                style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#e2e8f0;color:#475569;">Todos</span>
-                            <button id="clear-statuses" class="chip-clear-btn">✕ Limpiar</button>
-                        </div>
-                        <details id="status-dropdown" class="multi-dropdown">
-                            <summary><span id="status-trigger-text">Seleccionar status</span></summary>
-                            <div id="status-options" class="multi-dropdown-panel">
-                                <span style="color:#94a3b8; font-size:12px;">Cargando...</span>
-                            </div>
-                        </details>
                     </div>
                 </div>
                 <div class="filter-row" style="margin-bottom:16px; border-top:1px solid #f1f5f9; padding-top:16px;">

@@ -207,6 +207,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 'disconnected';
     }
 
+    function matchesSelectedStatus(status) {
+        if (selectedStatuses.size === 0) return true;
+        return selectedStatuses.has(getStatusFilterKey(status));
+    }
+
     function getStatusFilterLabel(statusKey) {
         if (statusKey === 'missing') return 'No está en DRUO';
         if (statusKey === 'connected') return 'Conectado';
@@ -531,7 +536,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const input = label.querySelector('input');
             input.addEventListener('change', () => {
                 input.checked ? selectedStatuses.add(s) : selectedStatuses.delete(s);
-                saveURLParams(); renderTable(); updateStatusCount();
+                saveURLParams();
+                renderTable();
+                renderComercial();
+                renderEscrituracionPush();
+                renderDescartados();
+                updateStatusCount();
             });
             statusOptionsEl.appendChild(label);
         });
@@ -641,11 +651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
-            .filter(d => {
-                if (selectedStatuses.size === 0) return true;
-                const dStatus = getStatusFilterKey(getRowStatus(d));
-                return selectedStatuses.has(dStatus);
-            })
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => selectedPortafolios.size === 0 || selectedPortafolios.has(d.portafolio))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
@@ -694,6 +700,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isCommercialPortfolio(d.portafolio))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
@@ -742,6 +749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isMissingInDruoStatus(getRowStatus(d)) || isDisconnectedStatus(getRowStatus(d)))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
@@ -841,10 +849,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     function renderDescartados() {
         if (!descartadosBody) return;
-        const sorted = sortRows(descartados, 'descartados');
+        const sorted = sortRows(descartados.filter(d => matchesSelectedStatus(getRowStatus(d))), 'descartados');
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            descartadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados aún.</td></tr>';
+            descartadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados para el status seleccionado.</td></tr>';
             return;
         }
         sorted.forEach(d => {
@@ -1049,6 +1057,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('#status-options input[type=\"checkbox\"]').forEach(c => { c.checked = false; });
             saveURLParams();
             renderTable();
+            renderComercial();
+            renderEscrituracionPush();
+            renderDescartados();
             updateStatusCount();
         });
     }
