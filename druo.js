@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function saveDescarte(row, razon) {
-        const { error } = await window.supabaseClient.from('druo_descartados').upsert([{
+        const enrichedPayload = {
             codigo_inmueble: row.codigo_inmueble,
             nombre_oportunidad: row.nombre_oportunidad,
             tipo_cliente: row.tipo_cliente,
@@ -118,8 +118,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             fecha_entrega: row.fecha_entrega || null,
             razon_descarte: razon,
             descartado_at: new Date().toISOString()
-        }], { onConflict: 'codigo_inmueble' });
-        return error;
+        };
+        const basePayload = {
+            codigo_inmueble: row.codigo_inmueble,
+            nombre_oportunidad: row.nombre_oportunidad,
+            portafolio: row.portafolio,
+            druo_status: row.druo_status || row.status || null,
+            razon_descarte: razon,
+            descartado_at: new Date().toISOString()
+        };
+
+        const firstAttempt = await window.supabaseClient
+            .from('druo_descartados')
+            .upsert([enrichedPayload], { onConflict: 'codigo_inmueble' });
+        if (!firstAttempt.error) return null;
+
+        // Fallback for schema/constraint drift between environments.
+        const message = (firstAttempt.error.message || '').toLowerCase();
+        const shouldFallback = message.includes('column')
+            || message.includes('on conflict')
+            || message.includes('constraint');
+        if (!shouldFallback) return firstAttempt.error;
+
+        const secondAttempt = await window.supabaseClient
+            .from('druo_descartados')
+            .upsert([basePayload], { onConflict: 'codigo_inmueble' });
+        if (!secondAttempt.error) return null;
+
+        const insertAttempt = await window.supabaseClient
+            .from('druo_descartados')
+            .insert([basePayload]);
+        return insertAttempt.error || secondAttempt.error;
     }
 
     async function deleteDescarte(codigo_inmueble) {
@@ -945,7 +974,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true; btn.textContent = 'Guardando...';
         const error = await saveDescarte(pendingDiscardRow, razon);
         if (error) {
-            alert('Error al guardar. Intenta de nuevo.');
+            const detail = error.message || error.details || error.hint || '';
+            alert(`Error al guardar. ${detail || 'Intenta de nuevo.'}`);
             btn.disabled = false; btn.textContent = 'Descartar';
             return;
         }
