@@ -676,16 +676,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">${text}</span>`;
     }
 
-    function isMissingOrWithinOneYear(fechaEntrega) {
+    function isMissingOrWithinLastYear(fechaEntrega) {
         if (!fechaEntrega) return true;
         const date = new Date(fechaEntrega);
         if (Number.isNaN(date.getTime())) return false;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const oneYearAhead = new Date(today);
-        oneYearAhead.setFullYear(oneYearAhead.getFullYear() + 1);
-        return date >= today && date <= oneYearAhead;
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        return date >= oneYearAgo && date <= today;
     }
 
     function getFilteredPendientesRows() {
@@ -720,7 +720,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
-            .filter(d => isMissingOrWithinOneYear(d.fecha_entrega))
+            .filter(d => isMissingOrWithinLastYear(d.fecha_entrega))
             .filter(d => !searchTxt
                 || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
                 || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
@@ -931,7 +931,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         entregaBody.innerHTML = '';
         if (sorted.length === 0) {
-            entregaBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes sin fecha o con fecha de entrega menor a 1 año.</td></tr>';
+            entregaBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes sin fecha o con fecha en los ultimos 12 meses.</td></tr>';
             return;
         }
 
