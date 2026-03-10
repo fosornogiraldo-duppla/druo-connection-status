@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('--- DRUO Connection Status v3 ---');
 
     // ---- DOM refs ----
+    const generalBody = document.getElementById('general-tbody');
+    const noConectadosBody = document.getElementById('no-conectados-tbody');
     const tableBody = document.getElementById('druo-tbody');
     const entregaBody = document.getElementById('entrega-tbody');
     const comercialBody = document.getElementById('comercial-tbody');
@@ -14,10 +16,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const portafolioOptionsEl = document.getElementById('portafolio-options');
     const statusTriggerText = document.getElementById('status-trigger-text');
     const portafolioTriggerText = document.getElementById('portafolio-trigger-text');
+    const generalSearchInput = document.getElementById('general-search-input');
+    const generalRemarkInput = document.getElementById('general-remark-input');
+    const noConectadosSearchInput = document.getElementById('no-conectados-search-input');
+    const noConectadosRemarkInput = document.getElementById('no-conectados-remark-input');
     const searchInput = document.getElementById('druo-search-input');
+    const remarkInput = document.getElementById('druo-remark-input');
     const entregaSearch = document.getElementById('entrega-search-input');
+    const entregaRemarkInput = document.getElementById('entrega-remark-input');
     const comercialSearch = document.getElementById('comercial-search-input');
+    const comercialRemarkInput = document.getElementById('comercial-remark-input');
     const escrituracionSearch = document.getElementById('escrituracion-search-input');
+    const escrituracionRemarkInput = document.getElementById('escrituracion-remark-input');
     const conectadosSearch = document.getElementById('conectados-search-input');
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
     const globalSegmentFilter = document.getElementById('global-segment-filter');
@@ -48,6 +58,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedSegment = 'all';
     let pendingDiscardRow = null;
     const tableSortState = {
+        general: { key: 'fecha_entrega', direction: 'asc' },
+        noConectados: { key: 'fecha_entrega', direction: 'asc' },
         pendientes: { key: 'fecha_entrega', direction: 'asc' },
         entrega: { key: 'fecha_entrega', direction: 'asc' },
         comercial: { key: null, direction: 'asc' },
@@ -570,6 +582,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             input.addEventListener('change', () => {
                 input.checked ? selectedStatuses.add(s) : selectedStatuses.delete(s);
                 saveURLParams();
+                renderGeneral();
+                renderNoConectados();
                 renderTable();
                 renderEntrega();
                 renderComercial();
@@ -688,58 +702,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         return date >= oneYearAgo && date <= today;
     }
 
+    function matchesSearch(row, searchTxt) {
+        if (!searchTxt) return true;
+        return (row.codigo_inmueble || '').toLowerCase().includes(searchTxt)
+            || (row.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
+            || (row.propietario_oportunidad || '').toLowerCase().includes(searchTxt);
+    }
+
+    function matchesRemark(row, remarkTxt) {
+        if (!remarkTxt) return true;
+        return (row.remarks || '').toLowerCase().includes(remarkTxt);
+    }
+
     function getFilteredPendientesRows() {
         const searchTxt = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const remarkTxt = remarkInput ? remarkInput.value.toLowerCase().trim() : '';
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => selectedPortafolios.size === 0 || selectedPortafolios.has(d.portafolio))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
         return sortRows(filtered, 'pendientes');
+    }
+
+    function getFilteredGeneralRows() {
+        const searchTxt = generalSearchInput ? generalSearchInput.value.toLowerCase().trim() : '';
+        const remarkTxt = generalRemarkInput ? generalRemarkInput.value.toLowerCase().trim() : '';
+        const filtered = getRowsForSelectedSegment()
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
+        return sortRows(filtered, 'general');
+    }
+
+    function getFilteredNoConectadosRows() {
+        const searchTxt = noConectadosSearchInput ? noConectadosSearchInput.value.toLowerCase().trim() : '';
+        const remarkTxt = noConectadosRemarkInput ? noConectadosRemarkInput.value.toLowerCase().trim() : '';
+        const filtered = getRowsForSelectedSegment()
+            .filter(d => !descartadosCodes.has(d.codigo_inmueble))
+            .filter(d => !isConnectedStatus(getRowStatus(d)))
+            .filter(d => matchesSelectedStatus(getRowStatus(d)))
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
+        return sortRows(filtered, 'noConectados');
     }
 
     function getFilteredComercialRows() {
         const searchTxt = comercialSearch ? comercialSearch.value.toLowerCase().trim() : '';
+        const remarkTxt = comercialRemarkInput ? comercialRemarkInput.value.toLowerCase().trim() : '';
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isCommercialPortfolio(d.portafolio))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
         return sortRows(filtered, 'comercial');
     }
 
     function getFilteredEntregaRows() {
         const searchTxt = entregaSearch ? entregaSearch.value.toLowerCase().trim() : '';
+        const remarkTxt = entregaRemarkInput ? entregaRemarkInput.value.toLowerCase().trim() : '';
         const filtered = getRowsForSelectedSegment()
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => isMissingOrWithinLastYear(d.fecha_entrega))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
         return sortRows(filtered, 'entrega');
     }
 
     function getFilteredEscrituracionRows() {
         const searchTxt = escrituracionSearch ? escrituracionSearch.value.toLowerCase().trim() : '';
+        const remarkTxt = escrituracionRemarkInput ? escrituracionRemarkInput.value.toLowerCase().trim() : '';
         const filtered = druoData
             .filter(d => getNormalizedLifecycle(d) === 'escrituracion')
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => !isConnectedStatus(getRowStatus(d)))
             .filter(d => isMissingInDruoStatus(getRowStatus(d)) || isDisconnectedStatus(getRowStatus(d)))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+            .filter(d => matchesSearch(d, searchTxt))
+            .filter(d => matchesRemark(d, remarkTxt));
         return sortRows(filtered, 'escrituracion');
     }
 
@@ -748,12 +793,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getActiveView() {
-        const views = ['pendientes', 'entrega', 'comercial', 'escrituracion', 'descartados'];
+        const views = ['general', 'noConectados', 'pendientes', 'entrega', 'comercial', 'escrituracion', 'descartados'];
         const active = views.find(v => {
             const el = document.getElementById(`view-${v}`);
             return el && !el.classList.contains('hidden');
         });
-        return active || 'pendientes';
+        return active || 'general';
     }
 
     function csvEscape(value) {
@@ -793,6 +838,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Portafolio',
             'Remarks'
         ];
+
+        if (view === 'general') {
+            const rows = getFilteredGeneralRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-general-${today}.csv`, sharedHeaders, rows);
+        }
+
+        if (view === 'noConectados') {
+            const rows = getFilteredNoConectadosRows().map(d => [
+                getNormalizedLifecycle(d),
+                displayStatusLabel(getRowStatus(d)),
+                d.codigo_inmueble || '',
+                d.nombre_oportunidad || '',
+                d.tipo_cliente || '',
+                d.propietario_oportunidad || '',
+                d.fecha_entrega || '',
+                d.portafolio || '',
+                d.remarks || ''
+            ]);
+            return downloadCsv(`druo-no-conectados-${today}.csv`, sharedHeaders, rows);
+        }
 
         if (view === 'pendientes') {
             const rows = getFilteredPendientesRows().map(d => [
@@ -882,6 +957,84 @@ document.addEventListener('DOMContentLoaded', async () => {
             ],
             rows
         );
+    }
+
+    // ----------------------------------------------------------------
+    // Render: General table
+    // ----------------------------------------------------------------
+    function renderGeneral() {
+        if (!generalBody) return;
+        const sorted = getFilteredGeneralRows();
+        const countEl = document.getElementById('general-count');
+        if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
+
+        generalBody.innerHTML = '';
+        if (sorted.length === 0) {
+            generalBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles activos con los filtros actuales.</td></tr>';
+            return;
+        }
+
+        sorted.forEach(d => {
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td>${remarksCell(d.remarks)}</td>
+                <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
+            `;
+            row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
+            row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
+            generalBody.appendChild(row);
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // Render: No conectados table
+    // ----------------------------------------------------------------
+    function renderNoConectados() {
+        if (!noConectadosBody) return;
+        const sorted = getFilteredNoConectadosRows();
+        const countEl = document.getElementById('no-conectados-count');
+        if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
+
+        noConectadosBody.innerHTML = '';
+        if (sorted.length === 0) {
+            noConectadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles no conectados con los filtros actuales.</td></tr>';
+            return;
+        }
+
+        sorted.forEach(d => {
+            const rowStatus = getRowStatus(d);
+            const isFailed = isDisconnectedStatus(rowStatus);
+            const badge = statusBadge(rowStatus, isFailed);
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.innerHTML = `
+                <td>${lifecycleBadge(d)}</td>
+                <td>${badge}</td>
+                <td><strong>${d.codigo_inmueble || '-'}</strong></td>
+                <td>${clientCell(d.nombre_oportunidad)}</td>
+                <td>${clientTypeCell(d.tipo_cliente)}</td>
+                <td>${ownerCell(d.propietario_oportunidad)}</td>
+                <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
+                <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
+                <td>${remarksCell(d.remarks)}</td>
+                <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
+            `;
+            row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
+            row.querySelector('.btn-discard').addEventListener('click', e => { e.stopPropagation(); openDiscardModal(d); });
+            noConectadosBody.appendChild(row);
+        });
     }
 
     // ----------------------------------------------------------------
@@ -1043,10 +1196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = getRowsForSelectedSegment()
             .filter(d => isConnectedStatus(getRowStatus(d)))
             .filter(d => filterPort === 'all' || d.portafolio === filterPort)
-            .filter(d => !searchTxt
-                || (d.codigo_inmueble || '').toLowerCase().includes(searchTxt)
-                || (d.nombre_oportunidad || '').toLowerCase().includes(searchTxt)
-                || (d.propietario_oportunidad || '').toLowerCase().includes(searchTxt));
+            .filter(d => matchesSearch(d, searchTxt));
 
         const sorted = sortRows(filtered, 'conectados');
         const cc = document.getElementById('conectados-count');
@@ -1204,7 +1354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingDiscardRow = null;
         closeModal('discard-modal');
         btn.disabled = false; btn.textContent = 'Descartar';
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderGeneral(); renderNoConectados(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     });
 
     // ----------------------------------------------------------------
@@ -1215,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { alert('Error al restaurar.'); return; }
         descartados = descartados.filter(d => d.codigo_inmueble !== codigo_inmueble);
         descartadosCodes.delete(codigo_inmueble);
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderGeneral(); renderNoConectados(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     }
 
     // Helper exposed globally
@@ -1224,10 +1374,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ----------------------------------------------------------------
     // Event listeners
     // ----------------------------------------------------------------
+    if (generalSearchInput) generalSearchInput.addEventListener('input', renderGeneral);
+    if (generalRemarkInput) generalRemarkInput.addEventListener('input', renderGeneral);
+    if (noConectadosSearchInput) noConectadosSearchInput.addEventListener('input', renderNoConectados);
+    if (noConectadosRemarkInput) noConectadosRemarkInput.addEventListener('input', renderNoConectados);
     if (searchInput) searchInput.addEventListener('input', () => { saveURLParams(); renderTable(); });
+    if (remarkInput) remarkInput.addEventListener('input', renderTable);
     if (entregaSearch) entregaSearch.addEventListener('input', renderEntrega);
+    if (entregaRemarkInput) entregaRemarkInput.addEventListener('input', renderEntrega);
     if (comercialSearch) comercialSearch.addEventListener('input', renderComercial);
+    if (comercialRemarkInput) comercialRemarkInput.addEventListener('input', renderComercial);
     if (escrituracionSearch) escrituracionSearch.addEventListener('input', renderEscrituracionPush);
+    if (escrituracionRemarkInput) escrituracionRemarkInput.addEventListener('input', renderEscrituracionPush);
     if (conectadosSearch) conectadosSearch.addEventListener('input', renderConectados);
     if (conectadosPortFilter) conectadosPortFilter.addEventListener('change', renderConectados);
     if (globalSegmentFilter) {
@@ -1239,6 +1397,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             buildStatusChips();
             buildPortafolioChips();
             buildConectadosPortFilter();
+            renderGeneral();
+            renderNoConectados();
             renderTable();
             renderEntrega();
             renderComercial();
@@ -1262,6 +1422,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             updateSortHeaders();
 
+            if (tableName === 'general') renderGeneral();
+            if (tableName === 'noConectados') renderNoConectados();
             if (tableName === 'pendientes') renderTable();
             if (tableName === 'entrega') renderEntrega();
             if (tableName === 'comercial') renderComercial();
@@ -1302,6 +1464,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedStatuses.clear();
             document.querySelectorAll('#status-options input[type=\"checkbox\"]').forEach(c => { c.checked = false; });
             saveURLParams();
+            renderGeneral();
+            renderNoConectados();
             renderTable();
             renderEntrega();
             renderComercial();
@@ -1339,6 +1503,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildStatusChips();
     buildPortafolioChips();
     buildConectadosPortFilter();
+    renderGeneral();
+    renderNoConectados();
     renderTable();
     renderEntrega();
     renderComercial();
