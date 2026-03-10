@@ -1175,9 +1175,7 @@
 
         <!-- VIEW TABS -->
         <div class="view-tabs">
-            <button class="view-tab active" id="tab-general" onclick="switchView('general')">🧾 General</button>
-            <button class="view-tab" id="tab-noConectados" onclick="switchView('noConectados')">🔌 No conectados</button>
-            <button class="view-tab" id="tab-pendientes" onclick="switchView('pendientes')">📋
+            <button class="view-tab active" id="tab-pendientes" onclick="switchView('pendientes')">📋
                 Pendientes</button>
             <button class="view-tab" id="tab-entrega" onclick="switchView('entrega')">📆 Sin fecha / últimos 12 meses</button>
             <button class="view-tab" id="tab-comercial" onclick="switchView('comercial')">📣 Push port. 5+ &amp; Progresión</button>
@@ -1209,102 +1207,8 @@
             </div>
         </div>
 
-        <!-- ====== VIEW: GENERAL ====== -->
-        <div id="view-general">
-            <div class="filter-card">
-                <div class="filter-row" style="margin-bottom:0;">
-                    <div class="filter-col" style="flex:1; min-width:220px;">
-                        <div class="section-label">Buscar</div>
-                        <input id="general-search-input" type="text" class="search-input"
-                            placeholder="🔍  Nombre, código o comercial...">
-                    </div>
-                    <div class="filter-col" style="flex:1; min-width:220px;">
-                        <div class="section-label">Remark</div>
-                        <input id="general-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
-                    </div>
-                    <div style="margin-left:auto; padding-top:24px;">
-                        <span id="general-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
-                    </div>
-                </div>
-                <div style="font-size:12px;color:#64748b;margin-top:12px;">
-                    Vista con <strong>todos los inmuebles activos</strong> del segmento seleccionado, sin separar por caso de uso.
-                </div>
-            </div>
-            <div class="table-card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="th-sortable" data-table="general" data-sort="segmento" style="min-width:140px;">Estado inmueble</th>
-                            <th class="th-sortable" data-table="general" data-sort="druo_status">Status DRUO</th>
-                            <th class="th-sortable" data-table="general" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
-                            <th class="th-sortable" data-table="general" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
-                            <th class="th-sortable" data-table="general" data-sort="tipo_cliente" style="min-width:140px;">Tipo cliente</th>
-                            <th class="th-sortable" data-table="general" data-sort="propietario_oportunidad" style="min-width:180px;">Comercial</th>
-                            <th class="th-sortable" data-table="general" data-sort="fecha_entrega">Fecha Entrega</th>
-                            <th class="th-sortable" data-table="general" data-sort="portafolio">Portafolio</th>
-                            <th class="th-sortable" data-table="general" data-sort="remarks" style="min-width:260px;">Remarks</th>
-                            <th style="min-width:110px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="general-tbody">
-                        <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ====== VIEW: NO CONECTADOS ====== -->
-        <div id="view-noConectados" class="hidden">
-            <div class="filter-card">
-                <div class="filter-row" style="margin-bottom:0;">
-                    <div class="filter-col" style="flex:1; min-width:220px;">
-                        <div class="section-label">Buscar</div>
-                        <input id="no-conectados-search-input" type="text" class="search-input"
-                            placeholder="🔍  Nombre, código o comercial...">
-                    </div>
-                    <div class="filter-col" style="flex:1; min-width:220px;">
-                        <div class="section-label">Remark</div>
-                        <input id="no-conectados-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
-                    </div>
-                    <div style="margin-left:auto; padding-top:24px;">
-                        <span id="no-conectados-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
-                    </div>
-                </div>
-                <div style="font-size:12px;color:#64748b;margin-top:12px;">
-                    Vista con <strong>todo lo que no está conectado</strong>: sin inscripción y desconectados.
-                </div>
-            </div>
-            <div class="table-card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="th-sortable" data-table="noConectados" data-sort="segmento" style="min-width:140px;">Estado inmueble</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="druo_status">Status DRUO</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="codigo_inmueble" style="min-width:150px;">Código Inmueble</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="nombre_oportunidad">Oportunidad / Cliente</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="tipo_cliente" style="min-width:140px;">Tipo cliente</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="propietario_oportunidad" style="min-width:180px;">Comercial</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="fecha_entrega">Fecha Entrega</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="portafolio">Portafolio</th>
-                            <th class="th-sortable" data-table="noConectados" data-sort="remarks" style="min-width:260px;">Remarks</th>
-                            <th style="min-width:110px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="no-conectados-tbody">
-                        <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- ====== VIEW: PENDIENTES ====== -->
-        <div id="view-pendientes" class="hidden">
+        <div id="view-pendientes">
             <div class="filter-card">
                 <div class="filter-row" style="margin-bottom:16px;">
                     <div class="filter-col" style="max-width:260px;">
@@ -1658,7 +1562,7 @@
 
         // ---- View switching ----
         function switchView(view) {
-            ['general', 'noConectados', 'pendientes', 'entrega', 'comercial', 'escrituracion', 'descartados'].forEach(v => {
+            ['pendientes', 'entrega', 'comercial', 'escrituracion', 'descartados'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
                 document.getElementById(`tab-${v}`).classList.toggle('active', v === view);
             });
