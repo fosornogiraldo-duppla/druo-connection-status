@@ -185,6 +185,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return row?.druo_status ?? row?.status ?? null;
     }
 
+    function getRawDruoStatus(status) {
+        const raw = (status || '').toString().trim();
+        return raw || 'SIN INSCRIPCION';
+    }
+
     function getNormalizedLifecycle(row) {
         const segmento = normalizeText(row?.segmento);
         if (segmento) {
@@ -346,6 +351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (key === 'segmento') return getNormalizedLifecycle(row);
         if (key === 'portafolio') return row.portafolio || 'Sin portafolio';
         if (key === 'druo_status') return displayStatusLabel(getRowStatus(row));
+        if (key === 'druo_status_raw') return getRawDruoStatus(getRowStatus(row));
         if (key === 'fecha_entrega' || key === 'descartado_at') {
             if (!row[key]) return null;
             const ts = new Date(row[key]).getTime();
@@ -661,6 +667,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `<div style="max-width:320px;font-size:12px;line-height:1.45;color:#475569;white-space:pre-wrap;word-break:break-word;">${text}</div>`;
     }
 
+    function rawStatusCell(status) {
+        const text = getRawDruoStatus(status);
+        return `<div style="max-width:180px;font-size:12px;line-height:1.35;color:#475569;white-space:normal;word-break:break-word;">${text}</div>`;
+    }
+
     function ownerCell(owner) {
         const text = (owner || '').toString().trim();
         if (!text) return '<span style="color:#cbd5e1;">-</span>';
@@ -701,7 +712,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function matchesRemark(row, remarkTxt) {
         if (!remarkTxt) return true;
-        return (row.remarks || '').toLowerCase().includes(remarkTxt);
+        const remarks = (row.remarks || '').toString().trim();
+        if (remarkTxt === '*' || remarkTxt === 'no vacio' || remarkTxt === 'no vacío' || remarkTxt === 'con remark') {
+            return remarks.length > 0;
+        }
+        return remarks.toLowerCase().includes(remarkTxt);
     }
 
     function getFilteredPendientesRows() {
@@ -732,7 +747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getFilteredEntregaRows() {
         const searchTxt = entregaSearch ? entregaSearch.value.toLowerCase().trim() : '';
         const remarkTxt = entregaRemarkInput ? entregaRemarkInput.value.toLowerCase().trim() : '';
-        const filtered = getRowsForSelectedSegment()
+        const filtered = druoData
             .filter(d => !descartadosCodes.has(d.codigo_inmueble))
             .filter(d => matchesSelectedStatus(getRowStatus(d)))
             .filter(d => isMissingOrWithinLastYear(d.fecha_entrega))
@@ -803,7 +818,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Comercial',
             'Fecha Entrega',
             'Portafolio',
-            'Remarks'
+            'Remarks',
+            'Status DRUO Raw'
         ];
 
         if (view === 'pendientes') {
@@ -816,7 +832,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 d.propietario_oportunidad || '',
                 d.fecha_entrega || '',
                 d.portafolio || '',
-                d.remarks || ''
+                d.remarks || '',
+                getRawDruoStatus(getRowStatus(d))
             ]);
             return downloadCsv(`druo-pendientes-${today}.csv`, sharedHeaders, rows);
         }
@@ -831,7 +848,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 d.propietario_oportunidad || '',
                 d.fecha_entrega || '',
                 d.portafolio || '',
-                d.remarks || ''
+                d.remarks || '',
+                getRawDruoStatus(getRowStatus(d))
             ]);
             return downloadCsv(`druo-push-5-mas-${today}.csv`, sharedHeaders, rows);
         }
@@ -846,7 +864,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 d.propietario_oportunidad || '',
                 d.fecha_entrega || '',
                 d.portafolio || '',
-                d.remarks || ''
+                d.remarks || '',
+                getRawDruoStatus(getRowStatus(d))
             ]);
             return downloadCsv(`druo-entrega-menos-1-anio-${today}.csv`, sharedHeaders, rows);
         }
@@ -861,7 +880,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 d.propietario_oportunidad || '',
                 d.fecha_entrega || '',
                 d.portafolio || '',
-                d.remarks || ''
+                d.remarks || '',
+                getRawDruoStatus(getRowStatus(d))
             ]);
             return downloadCsv(`druo-push-escrituracion-${today}.csv`, sharedHeaders, rows);
         }
@@ -875,6 +895,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             d.propietario_oportunidad || '',
             d.portafolio || '',
             d.remarks || '',
+            getRawDruoStatus(getRowStatus(d)),
             d.razon_descarte || '',
             d.descartado_at || ''
         ]);
@@ -889,6 +910,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'Comercial',
                 'Portafolio',
                 'Remarks',
+                'Status DRUO Raw',
                 'Razon de descarte',
                 'Fecha descarte'
             ],
@@ -907,7 +929,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tableBody.innerHTML = '';
         if (sorted.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Sin resultados con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -927,6 +949,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
+                <td>${rawStatusCell(rowStatus)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -943,7 +966,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         entregaBody.innerHTML = '';
         if (sorted.length === 0) {
-            entregaBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes sin fecha o con fecha en los ultimos 12 meses.</td></tr>';
+            entregaBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">No hay clientes sin fecha o con fecha en los ultimos 12 meses.</td></tr>';
             return;
         }
 
@@ -963,6 +986,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : 'Sin fecha'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
+                <td>${rawStatusCell(rowStatus)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -979,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         comercialBody.innerHTML = '';
         if (sorted.length === 0) {
-            comercialBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
+            comercialBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles comerciales pendientes con los filtros actuales.</td></tr>';
             return;
         }
 
@@ -999,6 +1023,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
+                <td>${rawStatusCell(rowStatus)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -1015,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         escrituracionBody.innerHTML = '';
         if (sorted.length === 0) {
-            escrituracionBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
+            escrituracionBody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles en escrituración no conectados/fallidos.</td></tr>';
             return;
         }
 
@@ -1035,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="color:#6e6e73;">${d.fecha_entrega ? new Date(d.fecha_entrega).toLocaleDateString('es-CO') : '-'}</td>
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${remarksCell(d.remarks)}</td>
+                <td>${rawStatusCell(rowStatus)}</td>
                 <td><button class="btn-discard" data-code="${d.codigo_inmueble}">Descartar</button></td>
             `;
             row.addEventListener('click', e => { if (!e.target.closest('.btn-discard')) showDetailModal(d, badge); });
@@ -1103,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sorted = getFilteredDescartadosRows();
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
-            descartadosBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados para el status seleccionado.</td></tr>';
+            descartadosBody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados para el status seleccionado.</td></tr>';
             return;
         }
         sorted.forEach(d => {
@@ -1122,6 +1148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span style="font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${d.portafolio || '-'}</span></td>
                 <td>${statusBadge(rowStatus, isFailed)}</td>
                 <td>${remarksCell(d.remarks)}</td>
+                <td>${rawStatusCell(rowStatus)}</td>
                 <td style="color:#475569;font-size:12px;max-width:200px;">${d.razon_descarte || '-'}</td>
                 <td style="color:#94a3b8;font-size:12px;">${date}</td>
                 <td><button class="btn-restore" data-code="${d.codigo_inmueble}">Restaurar</button></td>

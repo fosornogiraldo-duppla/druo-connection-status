@@ -374,6 +374,67 @@
             color: #1e40af;
         }
 
+        .failure-guide {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .failure-card {
+            background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+            border: 1px solid #fed7aa;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .failure-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #9a3412;
+        }
+
+        .failure-card p {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #7c2d12;
+        }
+
+        .failure-list {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .failure-list li {
+            color: #7c2d12;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .failure-list code {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid #fdba74;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 11px;
+            color: #9a3412;
+        }
+
+        .howto-source {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .howto-source a {
+            color: #0f766e;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
         .commercial-button-card {
             background: #f8fafc;
             border-radius: 14px;
@@ -1032,7 +1093,7 @@
         <header class="hero">
             <div>
                 <h1>Clientes conectados a DRUO</h1>
-                <p>Seguimiento del estado de conexión y gestión de clientes pendientes por portafolio.</p>
+                <p>Seguimiento del estado de conexión y gestión de todos los clientes por portafolio.</p>
             </div>
             <div class="kpi-group">
                 <div class="kpi-group-label">Operativos</div>
@@ -1148,6 +1209,46 @@
                     </div>
                 </div>
 
+                <div class="howto-section">
+                    <h3 class="howto-section-title spaced">Casos fallidos</h3>
+                    <div class="failure-guide">
+                        <div class="failure-card">
+                            <h4>Datos o titularidad incorrecta</h4>
+                            <p>Cuando el cliente sí existe pero la cuenta o el titular no coincide con la información registrada.</p>
+                            <ul class="failure-list">
+                                <li><code>INVALID_DETAILS</code> o <code>INVALID_ACCOUNT_NUMBER</code>: validar número de cuenta y datos cargados.</li>
+                                <li><code>ACCOUNT_DOES_NOT_BELONG_TO_END_USER</code>: la cuenta no pertenece al titular esperado.</li>
+                                <li><code>UNABLE_TO_LOCATE_END_USER</code> o <code>UNABLE_TO_LOCATE_ACCOUNT_HOLDER</code>: revisar identidad del cliente y reintentar con los datos correctos.</li>
+                            </ul>
+                        </div>
+
+                        <div class="failure-card">
+                            <h4>Cuenta no disponible</h4>
+                            <p>El banco o DRUO encuentra una cuenta, pero no puede usarse para la conexión.</p>
+                            <ul class="failure-list">
+                                <li><code>ACCOUNT_DOES_NOT_EXIST</code> o <code>UNABLE_TO_LOCATE_ACCOUNT</code>: la cuenta no se encuentra en el sistema.</li>
+                                <li><code>ACCOUNT_CLOSED</code>, <code>ACCOUNT_BLOCKED</code> o <code>ACCOUNT_INACTIVE</code>: pedir otra cuenta activa al cliente.</li>
+                                <li><code>USER_INELIGIBLE</code>: el usuario no cumple condiciones para esa acción.</li>
+                            </ul>
+                        </div>
+
+                        <div class="failure-card">
+                            <h4>Autorización o institución</h4>
+                            <p>La conexión falla por límites del flujo de autenticación o porque el banco no soporta ese tipo de conexión.</p>
+                            <ul class="failure-list">
+                                <li><code>INSTITUTION_NOT_SUPPORTED</code> o <code>COUNTRY_NOT_ENABLED</code>: no escalar al cliente; el banco o país no aplica.</li>
+                                <li><code>UNAUTHORIZED_OR_NOT_RECOGNIZED</code>, <code>AUTHENTICATION_FAILED</code> o <code>AUTHENTICATION_TIMED_OUT</code>: reenviar link y acompañar el proceso.</li>
+                                <li><code>AUTHORIZATION_REVOKED_BY_END_USER</code>: el cliente retiró el permiso; requiere nueva autorización.</li>
+                                <li><code>REQUESTED_BY_MERCHANT</code>: conexión cancelada o cerrada desde nuestro lado.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="howto-source">
+                        Referencia oficial DRUO:
+                        <a href="https://developer.druo.com/enums-and-lists/account-remarks/" target="_blank" rel="noopener noreferrer">Account Remarks</a>.
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1176,7 +1277,7 @@
         <!-- VIEW TABS -->
         <div class="view-tabs">
             <button class="view-tab active" id="tab-pendientes" onclick="switchView('pendientes')">📋
-                Pendientes</button>
+                Todos los clientes</button>
             <button class="view-tab" id="tab-entrega" onclick="switchView('entrega')">📆 Sin fecha / últimos 12 meses</button>
             <button class="view-tab" id="tab-comercial" onclick="switchView('comercial')">📣 Push port. 5+ &amp; Progresión</button>
             <button class="view-tab" id="tab-escrituracion" onclick="switchView('escrituracion')">🏗 Push escrituración</button>
@@ -1232,7 +1333,7 @@
                     <div class="filter-col" style="flex:1; min-width:220px;">
                         <div class="section-label">Remark</div>
                         <input id="druo-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
+                            placeholder="📝  Filtrar por remark... (* = no vacío)">
                     </div>
                     <div style="margin-left:auto; padding-top:24px;">
                         <span id="result-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
@@ -1266,12 +1367,13 @@
                             <th class="th-sortable" data-table="pendientes" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="pendientes" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="pendientes" data-sort="druo_status_raw" style="min-width:170px;">Status DRUO Raw</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
                     <tbody id="druo-tbody">
                         <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1290,7 +1392,7 @@
                     <div class="filter-col" style="flex:1; min-width:220px;">
                         <div class="section-label">Remark</div>
                         <input id="entrega-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
+                            placeholder="📝  Filtrar por remark... (* = no vacío)">
                     </div>
                     <div style="margin-left:auto; padding-top:24px;">
                         <span id="entrega-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
@@ -1313,12 +1415,13 @@
                             <th class="th-sortable" data-table="entrega" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="entrega" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="entrega" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="entrega" data-sort="druo_status_raw" style="min-width:170px;">Status DRUO Raw</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
                     <tbody id="entrega-tbody">
                         <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1360,7 +1463,7 @@
                     <div class="filter-col" style="flex:1; min-width:220px;">
                         <div class="section-label">Remark</div>
                         <input id="comercial-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
+                            placeholder="📝  Filtrar por remark... (* = no vacío)">
                     </div>
                     <div style="margin-left:auto; padding-top:24px;">
                         <span id="comercial-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
@@ -1383,12 +1486,13 @@
                             <th class="th-sortable" data-table="comercial" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="comercial" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="comercial" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="comercial" data-sort="druo_status_raw" style="min-width:170px;">Status DRUO Raw</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
                     <tbody id="comercial-tbody">
                         <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1439,7 +1543,7 @@
                     <div class="filter-col" style="flex:1; min-width:220px;">
                         <div class="section-label">Remark</div>
                         <input id="escrituracion-remark-input" type="text" class="search-input"
-                            placeholder="📝  Filtrar por remark...">
+                            placeholder="📝  Filtrar por remark... (* = no vacío)">
                     </div>
                     <div style="margin-left:auto; padding-top:24px;">
                         <span id="escrituracion-count" style="font-size:12px; color:#94a3b8;">— resultados</span>
@@ -1462,12 +1566,13 @@
                             <th class="th-sortable" data-table="escrituracion" data-sort="fecha_entrega">Fecha Entrega</th>
                             <th class="th-sortable" data-table="escrituracion" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="escrituracion" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="escrituracion" data-sort="druo_status_raw" style="min-width:170px;">Status DRUO Raw</th>
                             <th style="min-width:110px;"></th>
                         </tr>
                     </thead>
                     <tbody id="escrituracion-tbody">
                         <tr>
-                            <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1488,6 +1593,7 @@
                             <th class="th-sortable" data-table="descartados" data-sort="portafolio">Portafolio</th>
                             <th class="th-sortable" data-table="descartados" data-sort="druo_status">Status DRUO</th>
                             <th class="th-sortable" data-table="descartados" data-sort="remarks" style="min-width:260px;">Remarks</th>
+                            <th class="th-sortable" data-table="descartados" data-sort="druo_status_raw" style="min-width:170px;">Status DRUO Raw</th>
                             <th class="th-sortable" data-table="descartados" data-sort="razon_descarte">Razón de Descarte</th>
                             <th class="th-sortable" data-table="descartados" data-sort="descartado_at">Fecha Descarte</th>
                             <th style="min-width:100px;"></th>
@@ -1495,7 +1601,7 @@
                     </thead>
                     <tbody id="druo-descartados-tbody">
                         <tr>
-                            <td colspan="11" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
+                            <td colspan="12" style="text-align:center;padding:40px;color:#94a3b8;">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
