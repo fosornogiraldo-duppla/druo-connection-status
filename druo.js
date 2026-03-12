@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiPushFailed = document.getElementById('druo-kpi-push-failed');
     const kpiPushConectados = document.getElementById('druo-kpi-push-conectados');
     const kpiPushDescartados = document.getElementById('druo-kpi-push-descartados');
+    const kpiEntregaSinFecha = document.getElementById('druo-kpi-entrega-sin-fecha');
+    const kpiEntregaUltimoAno = document.getElementById('druo-kpi-entrega-ultimo-ano');
+    const kpiEntregaConectados = document.getElementById('druo-kpi-entrega-conectados');
+    const kpiEntregaDescartados = document.getElementById('druo-kpi-entrega-descartados');
     const chartTooltip = document.createElement('div');
     chartTooltip.className = 'chart-tooltip';
     document.body.appendChild(chartTooltip);
@@ -282,6 +286,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pushActivos = pushAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const pushConectados = pushActivos.filter(d => isConnectedStatus(getRowStatus(d)));
         const pushPendientes = pushActivos.filter(d => !isConnectedStatus(getRowStatus(d)));
+        const entregaAll = druoData.filter(d => isMissingOrWithinLastYear(d.fecha_entrega));
+        const entregaActivos = entregaAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
+        const entregaDescartados = entregaAll.filter(d => descartadosCodes.has(d.codigo_inmueble));
+        const entregaSinFecha = entregaActivos.filter(d => !d.fecha_entrega);
+        const entregaUltimoAno = entregaActivos.filter(d => d.fecha_entrega);
+        const entregaConectados = entregaActivos.filter(d => isConnectedStatus(getRowStatus(d)));
 
         if (kpiOperativoFailed) kpiOperativoFailed.textContent = pendientesOperativos.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
         if (kpiOperativoNull) kpiOperativoNull.textContent = pendientesOperativos.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
@@ -297,6 +307,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiPushNull) kpiPushNull.textContent = pushPendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
         if (kpiPushConectados) kpiPushConectados.textContent = pushConectados.length;
         if (kpiPushDescartados) kpiPushDescartados.textContent = pushDescartados.length;
+
+        if (kpiEntregaSinFecha) kpiEntregaSinFecha.textContent = entregaSinFecha.length;
+        if (kpiEntregaUltimoAno) kpiEntregaUltimoAno.textContent = entregaUltimoAno.length;
+        if (kpiEntregaConectados) kpiEntregaConectados.textContent = entregaConectados.length;
+        if (kpiEntregaDescartados) kpiEntregaDescartados.textContent = entregaDescartados.length;
     }
 
     function isCommercialPortfolio(portafolio) {
