@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiPushFailed = document.getElementById('druo-kpi-push-failed');
     const kpiPushConectados = document.getElementById('druo-kpi-push-conectados');
     const kpiPushDescartados = document.getElementById('druo-kpi-push-descartados');
-    const kpiEntregaSinFecha = document.getElementById('druo-kpi-entrega-sin-fecha');
-    const kpiEntregaUltimoAno = document.getElementById('druo-kpi-entrega-ultimo-ano');
+    const kpiEntregaNull = document.getElementById('druo-kpi-entrega-null');
+    const kpiEntregaFailed = document.getElementById('druo-kpi-entrega-failed');
     const kpiEntregaConectados = document.getElementById('druo-kpi-entrega-conectados');
     const kpiEntregaDescartados = document.getElementById('druo-kpi-entrega-descartados');
     const chartTooltip = document.createElement('div');
@@ -289,8 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const entregaAll = druoData.filter(d => isMissingOrWithinLastYear(d.fecha_entrega));
         const entregaActivos = entregaAll.filter(d => !descartadosCodes.has(d.codigo_inmueble));
         const entregaDescartados = entregaAll.filter(d => descartadosCodes.has(d.codigo_inmueble));
-        const entregaSinFecha = entregaActivos.filter(d => !d.fecha_entrega);
-        const entregaUltimoAno = entregaActivos.filter(d => d.fecha_entrega);
+        const entregaPendientes = entregaActivos.filter(d => !isConnectedStatus(getRowStatus(d)));
         const entregaConectados = entregaActivos.filter(d => isConnectedStatus(getRowStatus(d)));
 
         if (kpiOperativoFailed) kpiOperativoFailed.textContent = pendientesOperativos.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
@@ -308,8 +307,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (kpiPushConectados) kpiPushConectados.textContent = pushConectados.length;
         if (kpiPushDescartados) kpiPushDescartados.textContent = pushDescartados.length;
 
-        if (kpiEntregaSinFecha) kpiEntregaSinFecha.textContent = entregaSinFecha.length;
-        if (kpiEntregaUltimoAno) kpiEntregaUltimoAno.textContent = entregaUltimoAno.length;
+        if (kpiEntregaNull) kpiEntregaNull.textContent = entregaPendientes.filter(d => isMissingInDruoStatus(getRowStatus(d))).length;
+        if (kpiEntregaFailed) kpiEntregaFailed.textContent = entregaPendientes.filter(d => isDisconnectedStatus(getRowStatus(d))).length;
         if (kpiEntregaConectados) kpiEntregaConectados.textContent = entregaConectados.length;
         if (kpiEntregaDescartados) kpiEntregaDescartados.textContent = entregaDescartados.length;
     }
