@@ -26,6 +26,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conectadosPortFilter = document.getElementById('conectados-filter-portafolio');
     const globalSegmentFilter = document.getElementById('global-segment-filter');
     const exportCsvBtn = document.getElementById('export-csv-btn');
+    const metaSummaryTarget = document.getElementById('meta-summary-target');
+    const metaSummaryAchieved = document.getElementById('meta-summary-achieved');
+    const metaSummaryGap = document.getElementById('meta-summary-gap');
+    const metaSummaryProgress = document.getElementById('meta-summary-progress');
+    const metaTargetInput = document.getElementById('meta-target-input');
+    const metaProgressFill = document.getElementById('meta-progress-fill');
+    const metaAllocation = document.getElementById('meta-allocation');
+    const metaAssumptionNote = document.getElementById('meta-assumption-note');
 
     const kpiOperativoFailed = document.getElementById('druo-kpi-operativo-failed');
     const kpiOperativoNull = document.getElementById('druo-kpi-operativo-null');
@@ -51,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedStatuses = new Set(); // empty = all statuses
     let selectedSegment = 'all';
     let pendingDiscardRow = null;
+    let metaConfig = { totalTarget: 0, portfolioTargets: {} };
     const tableSortState = {
         pendientes: { key: 'fecha_entrega', direction: 'asc' },
         entrega: { key: 'fecha_entrega', direction: 'asc' },
@@ -80,6 +89,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const search = searchInput ? searchInput.value.trim() : '';
         if (search) params.set('search', search);
         window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`);
+    }
+
+    function loadMetaConfig() {
+        try {
+            const raw = window.localStorage.getItem('druo-meta-compra-config');
+            if (!raw) return { totalTarget: 0, portfolioTargets: {} };
+            const parsed = JSON.parse(raw);
+            return {
+                totalTarget: Number(parsed?.totalTarget) >= 0 ? Number(parsed.totalTarget) : 0,
+                portfolioTargets: parsed?.portfolioTargets && typeof parsed.portfolioTargets === 'object'
+                    ? parsed.portfolioTargets
+                    : {}
+            };
+        } catch (error) {
+            console.warn('No se pudo leer la configuración de meta de compra:', error);
+            return { totalTarget: 0, portfolioTargets: {} };
+        }
+    }
+
+    function saveMetaConfig() {
+        try {
+            window.localStorage.setItem('druo-meta-compra-config', JSON.stringify(metaConfig));
+        } catch (error) {
+            console.warn('No se pudo guardar la configuración de meta de compra:', error);
+        }
     }
 
     // ----------------------------------------------------------------
@@ -498,6 +532,95 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function getMetaPortfolioRows() {
+        const grouped = new Map();
+        getOperativosRows().forEach(row => {
+            const portafolio = row.portafolio || 'Sin portafolio';
+            if (!grouped.has(portafolio)) {
+                grouped.set(portafolio, {
+                    portafolio,
+                    active: 0,
+                    connected: 0,
+                    discarded: 0,
+                    target: Number(metaConfig.portfolioTargets?.[portafolio]) || 0
+                });
+            }
+
+            const bucket = grouped.get(portafolio);
+            if (descartadosCodes.has(row.codigo_inmueble)) {
+                bucket.discarded += 1;
+                return;
+            }
+
+            bucket.active += 1;
+            if (isConnectedStatus(getRowStatus(row))) bucket.connected += 1;
+        });
+
+        return [...grouped.values()]
+            .map(row => ({
+                ...row,
+                gap: Math.max(row.target - row.connected, 0),
+                progress: row.target > 0 ? Math.round((row.connected / row.target) * 100) : 0
+            }))
+            .sort((a, b) => comparePortafolios(a.portafolio, b.portafolio));
+    }
+
+    function renderMetaPurchaseDashboard() {
+        if (!metaAllocation) return;
+
+        const rows = getMetaPortfolioRows();
+        const totalTarget = Number(metaConfig.totalTarget) || 0;
+        const totalAchieved = rows.reduce((acc, row) => acc + row.connected, 0);
+        const totalActivePipeline = rows.reduce((acc, row) => acc + Math.max(row.active - row.connected, 0), 0);
+        const totalGap = Math.max(totalTarget - totalAchieved, 0);
+        const progress = totalTarget > 0 ? Math.min((totalAchieved / totalTarget) * 100, 100) : 0;
+
+        if (metaSummaryTarget) metaSummaryTarget.textContent = totalTarget;
+        if (metaSummaryAchieved) metaSummaryAchieved.textContent = totalAchieved;
+        if (metaSummaryGap) metaSummaryGap.textContent = totalGap;
+        if (metaSummaryProgress) metaSummaryProgress.textContent = totalTarget > 0 ? `${Math.round(progress)}%` : '0%';
+        if (metaTargetInput && document.activeElement !== metaTargetInput) metaTargetInput.value = totalTarget > 0 ? totalTarget : '';
+        if (metaProgressFill) metaProgressFill.style.width = `${progress}%`;
+        if (metaAssumptionNote) {
+            metaAssumptionNote.textContent = `Pipeline activo disponible: ${totalActivePipeline}. El logrado usa conectados DRUO como proxy de compra.`;
+        }
+
+        if (rows.length === 0) {
+            metaAllocation.innerHTML = '<div class="goal-breakdown-empty">No hay portafolios operativos para calcular la meta.</div>';
+            return;
+        }
+
+        metaAllocation.innerHTML = rows.map(row => `
+            <div class="goal-breakdown-row">
+                <div class="goal-breakdown-name">${row.portafolio}</div>
+                <div class="goal-breakdown-metric"><strong>${row.connected}</strong>logrado</div>
+                <div class="goal-breakdown-metric"><strong>${row.active}</strong>activos</div>
+                <div class="goal-breakdown-metric"><strong>${row.gap}</strong>brecha</div>
+                <div>
+                    <input
+                        class="goal-breakdown-input"
+                        type="number"
+                        min="0"
+                        step="1"
+                        data-meta-portafolio="${row.portafolio.replace(/"/g, '&quot;')}"
+                        value="${row.target > 0 ? row.target : ''}"
+                        placeholder="Meta"
+                    >
+                </div>
+            </div>
+        `).join('');
+
+        metaAllocation.querySelectorAll('[data-meta-portafolio]').forEach(input => {
+            input.addEventListener('change', event => {
+                const portafolio = event.target.dataset.metaPortafolio;
+                const value = Math.max(Number(event.target.value) || 0, 0);
+                metaConfig.portfolioTargets[portafolio] = value;
+                saveMetaConfig();
+                renderMetaPurchaseDashboard();
+            });
+        });
+    }
+
     function buildOverviewSegment(label, className, value, total) {
         if (!value || !total) return '';
         const width = Math.max((value / total) * 100, 2.5);
@@ -665,6 +788,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const text = (remarks || '').toString().trim();
         if (!text) return '<span style="color:#cbd5e1;">-</span>';
         return `<div style="max-width:320px;font-size:12px;line-height:1.45;color:#475569;white-space:pre-wrap;word-break:break-word;">${text}</div>`;
+    }
+
+    function discardReasonCell(reason) {
+        const text = (reason || '').toString().trim();
+        if (!text) return '<span style="color:#cbd5e1;">-</span>';
+        return `<div style="max-width:320px;font-size:12px;line-height:1.45;color:#475569;white-space:normal;word-break:break-word;">${text}</div>`;
     }
 
     function rawStatusCell(status) {
@@ -1127,6 +1256,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderDescartados() {
         if (!descartadosBody) return;
         const sorted = getFilteredDescartadosRows();
+        const countEl = document.getElementById('descartados-count');
+        if (countEl) countEl.textContent = `${sorted.length} resultado${sorted.length !== 1 ? 's' : ''}`;
         descartadosBody.innerHTML = '';
         if (sorted.length === 0) {
             descartadosBody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#94a3b8;">No hay inmuebles descartados para el status seleccionado.</td></tr>';
@@ -1149,8 +1280,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${statusBadge(rowStatus, isFailed)}</td>
                 <td>${remarksCell(d.remarks)}</td>
                 <td>${rawStatusCell(rowStatus)}</td>
-                <td style="color:#475569;font-size:12px;max-width:200px;">${d.razon_descarte || '-'}</td>
-                <td style="color:#94a3b8;font-size:12px;">${date}</td>
+                <td>${discardReasonCell(d.razon_descarte)}</td>
+                <td style="color:#94a3b8;font-size:12px;white-space:nowrap;">${date}</td>
                 <td><button class="btn-restore" data-code="${d.codigo_inmueble}">Restaurar</button></td>
             `;
             row.querySelector('.btn-restore').addEventListener('click', async e => {
@@ -1240,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pendingDiscardRow = null;
         closeModal('discard-modal');
         btn.disabled = false; btn.textContent = 'Descartar';
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderMetaPurchaseDashboard(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     });
 
     // ----------------------------------------------------------------
@@ -1251,7 +1382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) { alert('Error al restaurar.'); return; }
         descartados = descartados.filter(d => d.codigo_inmueble !== codigo_inmueble);
         descartadosCodes.delete(codigo_inmueble);
-        updateKPIs(); renderPortfolioOverview(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
+        updateKPIs(); renderPortfolioOverview(); renderMetaPurchaseDashboard(); renderTable(); renderEntrega(); renderComercial(); renderEscrituracionPush(); renderDescartados(); buildPortafolioChips();
     }
 
     // Helper exposed globally
@@ -1354,11 +1485,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (exportCsvBtn) {
         exportCsvBtn.addEventListener('click', exportCurrentViewToCsv);
     }
+    if (metaTargetInput) {
+        metaTargetInput.addEventListener('input', event => {
+            metaConfig.totalTarget = Math.max(Number(event.target.value) || 0, 0);
+            saveMetaConfig();
+            renderMetaPurchaseDashboard();
+        });
+    }
 
     // ----------------------------------------------------------------
     // Init
     // ----------------------------------------------------------------
     const urlP = getURLParams();
+    metaConfig = loadMetaConfig();
     if (searchInput) searchInput.value = urlP.search;
     selectedSegment = ['all', 'operativo', 'escrituracion'].includes(urlP.segment) ? urlP.segment : 'all';
     if (globalSegmentFilter) globalSegmentFilter.value = selectedSegment;
@@ -1376,6 +1515,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateKPIs();
     renderPortfolioOverview();
+    renderMetaPurchaseDashboard();
     buildStatusChips();
     buildPortafolioChips();
     buildConectadosPortFilter();
